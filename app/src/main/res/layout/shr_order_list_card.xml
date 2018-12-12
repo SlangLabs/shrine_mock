@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="@android:color/transparent"
+    android:layout_marginTop="4dp"
+    android:layout_marginLeft="4dp"
+    android:layout_marginRight="4dp"
+    app:cardElevation="0dp"
+    app:cardPreventCornerOverlap="true">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/shr_drawable_selector"
+        android:padding="8dp"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/order_number"
+            android:layout_marginTop="4dp"
+            android:text="Order Number"
+            android:textStyle="bold"
+            android:textColor="@android:color/darker_gray"
+            android:textAppearance="?attr/textAppearanceBody1"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/order_date"
+            android:layout_marginTop="4dp"
+            android:text="Order Date"
+            android:textStyle="bold"
+            android:textColor="@android:color/darker_gray"
+            android:textAppearance="?attr/textAppearanceBody1"/>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view_order_list_card"
+            android:padding="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+</android.support.design.card.MaterialCardView>

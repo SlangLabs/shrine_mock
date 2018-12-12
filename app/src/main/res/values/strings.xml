@@ -1,0 +1,31 @@
+<resources>
+    <string name="shr_app_name">Shrine</string>
+    <string name="shr_hint_username">Username</string>
+    <string name="shr_hint_password">Password</string>
+    <string name="shr_button_next">Next</string>
+    <string name="shr_button_cancel">Cancel</string>
+    <string name="shr_error_password">Password must contain at least 8 characters.</string>
+    <string name="shr_filter_title">Filter</string>
+    <string name="shr_search_title">Search</string>
+    <string name="shr_product_title">Title</string>
+    <string name="shr_product_description">Secondary text</string>
+    <string name="shr_order_brand">Brand</string>
+    <string name="shr_order_price">Price</string>
+    <string name="shr_order_status">Shipping</string>
+    <string name="shr_order_location">Location</string>
+    <string name="shr_order_delivery">Delivery Date</string>
+    <string name="shr_order_number">Order Number</string>
+    <string name="shr_order_date">Order Date</string>
+
+    <!-- Shrine backdrop menu labels -->
+    <string name="shr_featured_label">Featured</string>
+    <string name="shr_apartment_label">Apartment</string>
+    <string name="shr_accessories_label">Accessories</string>
+    <string name="shr_shoes_label">Shoes</string>
+    <string name="shr_tops_label">Tops</string>
+    <string name="shr_bottoms_label">Bottoms</string>
+    <string name="shr_dresses_label">Dresses</string>
+    <string name="shr_account_label">My Account</string>
+    <string name="shr_my_orders_label">My Orders</string>
+    <string name="shr_contact_label">Contact Us</string>
+</resources>
