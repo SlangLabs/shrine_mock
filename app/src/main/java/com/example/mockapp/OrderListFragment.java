@@ -68,17 +68,18 @@ public class OrderListFragment extends Fragment {
         String mode = "";
         if (bundle != null)
             mode = bundle.getString(ActivityDetector.ACTIVITY_MODE);
-        if (mode == ActivityDetector.MODE_TRACK_PRODUCT) {
-            Log.d(TAG, "Mode is ActivityDetector.MODE_TRACK_PRODUCT");
-            orderList = bundle.getParcelableArrayList(ActivityDetector.ORDER_LIST);
-            if(orderList!=null) {
-                Log.d(TAG, "Size of orderList is " + orderList.size());
+        if (mode!=null) {
+            if (mode.equals(ActivityDetector.MODE_TRACK_PRODUCT)
+                    || mode.equals(ActivityDetector.MODE_REFUND_PRODUCT)
+                    || mode.equals(ActivityDetector.MODE_RETURN_PRODUCT)) {
+                Log.d(TAG, "Mode is ActivityDetector.MODE_TRACK_PRODUCT");
+                orderList = bundle.getParcelableArrayList(ActivityDetector.ORDER_LIST);
+                //TODO implement multi-modal approach by letting Slang know when user clicks on an item
+            } else {
+                orderList = OrderList.initOrderList(getResources());
             }
-            else {
-                Log.d(TAG, "OrderList is NULL");
-            }
-            //TODO implement multi-modal approach by letting Slang know when user clicks on an item
-        } else {
+        }
+        else {
             orderList = OrderList.initOrderList(getResources());
         }
 

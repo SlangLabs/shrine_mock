@@ -95,7 +95,6 @@ public class VoiceInterface {
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
                     public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
-                        //TODO show refund status for the first item on the list for refund
                         Intent i = new Intent(appContext, OrderListActivity.class);
                         Log.d(TAG, "******* Slang Triggering Default Refund Intent");
                         i.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_REFUND_DEFAULT);
@@ -141,7 +140,12 @@ public class VoiceInterface {
                     @Override
                     public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
                         // TODO show confirmation to return and stamp it
-                        return null;
+                        Intent i = new Intent(appContext, OrderListActivity.class);
+                        Log.d(TAG, "******* Slang Triggering Default Return Intent");
+                        i.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_RETURN_DEFAULT);
+                        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        appContext.startActivity(i);
+                        return slangSession.success();
                     }
                 });
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_RETURN_PRODUCT)
@@ -152,7 +156,32 @@ public class VoiceInterface {
                         // user does not say and stamps instead)
                         //TODO if product not delivered yet, use SlangContext class to launch cancel intent
                         // OR JUST SHOW CANCELLED AND STAMP
-                        return null;
+                        if(slangResolvedIntent.getEntity(ActivityDetector.ENTITY_PRODUCT).isResolved()) {
+                            String productName = String.valueOf(slangResolvedIntent
+                                    .getEntity(ActivityDetector.ENTITY_PRODUCT).getValue());
+                            String productColor = String.valueOf(slangResolvedIntent
+                                    .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
+                            String productBrand = String.valueOf(slangResolvedIntent
+                                    .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
+                            Intent i = new Intent(appContext, OrderListActivity.class);
+                            Log.d(TAG, "Slang Triggering Refund Track Intent");
+                            Log.d(TAG,"The name of product is " + productName);
+                            if (!productColor.isEmpty()) {
+                                //Put color details in intent
+                                Log.d(TAG,"The color of product is " + productColor);
+                                i.putExtra(ActivityDetector.ENTITY_COLOR, productColor);
+                            }
+                            if (!productBrand.isEmpty()) {
+                                Log.d(TAG, "The brand of the product is " + productBrand);
+                                i.putExtra(ActivityDetector.ENTITY_BRAND, productBrand);
+                            }
+                            i.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_RETURN_PRODUCT);
+                            i.putExtra(ActivityDetector.ENTITY_PRODUCT, productName);
+                            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            appContext.startActivity(i);
+                            return slangSession.success();
+                        }
+                        return slangSession.failure();
                     }
                 });
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_CANCEL_PRODUCT)

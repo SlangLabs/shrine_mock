@@ -8,7 +8,8 @@ public class ActivityDetector {
     public static final String MODE_CANCEL = "cancel";
     public static final String MODE_REFUND_DEFAULT = "refund_default";
     public static final String MODE_REFUND_PRODUCT = "refund_product";
-    public static final String MODE_RETURN = "return";
+    public static final String MODE_RETURN_DEFAULT = "return_default";
+    public static final String MODE_RETURN_PRODUCT = "return_product";
 
     public static final String ORDER_DATE = "date";
     public static final String ORDER_NUMBER = "number";
