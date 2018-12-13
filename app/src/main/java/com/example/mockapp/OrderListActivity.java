@@ -41,9 +41,9 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                 orderList = OrderList.initOrderList(getResources());
                 List<OrderEntry> list;
                 switch (mode) {
-                    case ActivityDetector.MODE_PRODUCT_DEFAULT:
+                    case ActivityDetector.MODE_TRACK_DEFAULT:
                         OrderEntryFragment fragment = new OrderEntryFragment();
-                        //bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_PRODUCT_DEFAULT);
+                        //bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_DEFAULT);
                         bundle.putString(ActivityDetector.ORDER_NUMBER, "Order#: " + orderList.get(0).order_number);
                         bundle.putString(ActivityDetector.ORDER_DATE, "Order Date: " + orderList.get(0).order_date);
                         // truncate the list to show only the first item
@@ -55,7 +55,7 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                                 .add(R.id.orderListContainer, fragment)
                                 .commit();
                         break;
-                    case ActivityDetector.MODE_PRODUCT:
+                    case ActivityDetector.MODE_TRACK_PRODUCT:
                         String productName = intent.getStringExtra(ActivityDetector.ENTITY_PRODUCT);
                         String productColor = intent.getStringExtra(ActivityDetector.ENTITY_COLOR);
                         String productBrand = intent.getStringExtra(ActivityDetector.ENTITY_BRAND);
@@ -125,7 +125,7 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                             case 1:
                                 Toast.makeText(this, "It is the unique case, showing product", Toast.LENGTH_LONG).show();
                                 fragment = new OrderEntryFragment();
-                                bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_PRODUCT);
+                                bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_PRODUCT);
                                 bundle.putString(ActivityDetector.ORDER_NUMBER, "Order#: " + orders.get(0).order_number);
                                 bundle.putString(ActivityDetector.ORDER_DATE, "Order Date: " + orders.get(0).order_date);
                                 bundle.putParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST,
@@ -140,7 +140,7 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                                 //Open OrderListFragment with matching products
                                 Toast.makeText(this, "Multiple products found", Toast.LENGTH_LONG).show();
                                 OrderListFragment orderListFragment = new OrderListFragment();
-                                bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_PRODUCT);
+                                bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_PRODUCT);
                                 bundle.putParcelableArrayList(ActivityDetector.ORDER_LIST,
                                         (ArrayList<OrderList>) orders);
                                 orderListFragment.setArguments(bundle);
@@ -151,8 +151,139 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                                 break;
                         }
                         break;
-                    case ActivityDetector.MODE_REFUND:
+                    case ActivityDetector.MODE_REFUND_DEFAULT:
+                        int index = -1;
+                        orders = new ArrayList<>();
+                        for(int i = 0; i < orderList.size(); i++) {
+                            list = orderList.get(i).items;
+                            List<OrderEntry> orderEntries = new ArrayList<>();
+                            for(int j = 0; j < list.size(); j++) {
+                                OrderEntry entry = list.get(j);
+                                if (entry.returned) {
+                                    index = i;
+                                    orderEntries.add(entry);
+                                    break;
+                                }
+                            }
+                            if (index > 0) {
+                                orders.add(new OrderList(orderList.get(i).order_number,
+                                        orderList.get(i).order_date, orderEntries));
+                                break;
+                            }
+                        }
+                        fragment = new OrderEntryFragment();
+                        bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_PRODUCT);
+                        bundle.putString(ActivityDetector.ORDER_NUMBER, "Order#: " + orders.get(0).order_number);
+                        bundle.putString(ActivityDetector.ORDER_DATE, "Order Date: " + orders.get(0).order_date);
+                        bundle.putParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST,
+                                (ArrayList<OrderEntry>) orders.get(0).items);
+                        fragment.setArguments(bundle);
+                        getSupportFragmentManager()
+                                .beginTransaction()
+                                .add(R.id.orderListContainer, fragment)
+                                .commit();
+                        break;
+                    case ActivityDetector.MODE_REFUND_PRODUCT:
+                        productName = intent.getStringExtra(ActivityDetector.ENTITY_PRODUCT);
+                        productColor = intent.getStringExtra(ActivityDetector.ENTITY_COLOR);
+                        productBrand = intent.getStringExtra(ActivityDetector.ENTITY_BRAND);
+                        num = 0;
+                        orders = new ArrayList<>();
+                        for(int i = 0; i < orderList.size(); i++) {
+                            list = orderList.get(i).items;
+                            List<OrderEntry> orderEntries = new ArrayList<>();
+                            boolean storeOut = false;
+                            for (int j = 0; j < list.size(); j++) {
+                                OrderEntry entry = list.get(j);
+                                String name = entry.title;
+                                String color = entry.color;
+                                String brand = entry.brand;
+                                if(!entry.returned) {
+                                    // Do nothing
+                                }
+                                else {
+                                    boolean store = false;
 
+                                    if (name.toLowerCase().contains(productName.toLowerCase())) {
+                                        if (productColor != null) {
+                                            if (productColor.equalsIgnoreCase(color)) {
+                                                //If color is present from user input we compare and
+                                                // only validate if color and name match
+                                                if (productBrand != null) {
+                                                    if(productBrand.equalsIgnoreCase(brand)) {
+                                                        num++;
+                                                        store = true;
+                                                        storeOut = true;
+                                                    }
+                                                }
+                                                else {
+                                                    num++;
+                                                    store = true;
+                                                    storeOut = true;
+                                                }
+                                            }
+                                        }
+                                        else {
+                                            if (productBrand != null) {
+                                                if(productBrand.equalsIgnoreCase(brand)) {
+                                                    num++;
+                                                    store = true;
+                                                    storeOut = true;
+                                                }
+                                            }
+                                            else {
+                                                num++;
+                                                store = true;
+                                                storeOut = true;
+                                            }
+                                        }
+                                    }
+                                    if (store) {
+                                        orderEntries.add(entry);
+                                        Log.d(TAG, "Adding orderEntry to list of OrderEntries");
+                                    }
+                                }
+                            }
+                            if (storeOut) {
+                                orders.add(new OrderList(orderList.get(i).order_number,
+                                        orderList.get(i).order_date, orderEntries));
+                                Log.d(TAG, "Adding list of OrderEntries to list of orderList");
+                            }
+                        }
+                        switch (num) {
+                            case 0:
+                                // TODO show a message no matching products matching found
+                                Toast.makeText(this, "Sorry, no matching products found", Toast.LENGTH_LONG).show();
+                                break;
+                            case 1:
+                                Toast.makeText(this, "It is the unique case, showing product", Toast.LENGTH_LONG).show();
+                                fragment = new OrderEntryFragment();
+                                bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_REFUND_PRODUCT);
+                                bundle.putString(ActivityDetector.ORDER_NUMBER, "Order#: " + orders.get(0).order_number);
+                                bundle.putString(ActivityDetector.ORDER_DATE, "Order Date: " + orders.get(0).order_date);
+                                bundle.putParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST,
+                                        (ArrayList<OrderEntry>) orders.get(0).items);
+                                fragment.setArguments(bundle);
+                                getSupportFragmentManager()
+                                        .beginTransaction()
+                                        .add(R.id.orderListContainer, fragment)
+                                        .commit();
+                                break;
+                            default:
+                                //Open OrderListFragment with matching products
+                                Toast.makeText(this, "Multiple products found", Toast.LENGTH_LONG).show();
+                                OrderListFragment orderListFragment = new OrderListFragment();
+                                bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_REFUND_PRODUCT);
+                                bundle.putParcelableArrayList(ActivityDetector.ORDER_LIST,
+                                        (ArrayList<OrderList>) orders);
+                                orderListFragment.setArguments(bundle);
+                                getSupportFragmentManager()
+                                        .beginTransaction()
+                                        .add(R.id.orderListContainer, orderListFragment)
+                                        .commit();
+                                break;
+                        }
+                        break;
                 }
             }
         }

@@ -17,8 +17,8 @@ public class FeedbackActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feedback);
-        b=(Button)findViewById(R.id.button);
-        e2=(EditText)findViewById(R.id.editText2);
+        b=findViewById(R.id.button);
+        e2=findViewById(R.id.editText2);
         b.setOnClickListener(new View.OnClickListener() {
             @Override            public void onClick(View v) {
                 Intent i = new Intent(Intent.ACTION_SEND);
