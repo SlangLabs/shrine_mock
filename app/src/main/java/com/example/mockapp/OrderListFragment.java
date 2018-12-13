@@ -68,8 +68,8 @@ public class OrderListFragment extends Fragment {
         String mode = "";
         if (bundle != null)
             mode = bundle.getString(ActivityDetector.ACTIVITY_MODE);
-        if (mode == ActivityDetector.MODE_PRODUCT) {
-            Log.d(TAG, "Mode is ActivityDetector.MODE_PRODUCT");
+        if (mode == ActivityDetector.MODE_TRACK_PRODUCT) {
+            Log.d(TAG, "Mode is ActivityDetector.MODE_TRACK_PRODUCT");
             orderList = bundle.getParcelableArrayList(ActivityDetector.ORDER_LIST);
             if(orderList!=null) {
                 Log.d(TAG, "Size of orderList is " + orderList.size());
