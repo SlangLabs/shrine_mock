@@ -16,6 +16,7 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.mockapp.network.OrderEntry;
@@ -36,12 +37,14 @@ public class OrderEntryFragment extends Fragment {
     private List<OrderEntry> orderEntries;
     private TextView orderNum;
     private TextView date;
+    private ImageView cancelled;
     //private String mode;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
         Bundle bundle = getArguments();
         if (bundle != null) {
             //mode = bundle.getString(ActivityDetector.ACTIVITY_MODE);
@@ -60,6 +63,9 @@ public class OrderEntryFragment extends Fragment {
         setUpToolbar(view);
 
         featured = view.findViewById(R.id.featured);
+
+
+
         featured.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
