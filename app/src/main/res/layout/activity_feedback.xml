@@ -1,0 +1,52 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".FeedbackActivity"
+    android:orientation="vertical"
+    android:layout_margin="24dp">
+
+   <ImageView
+       android:layout_width="match_parent"
+       android:layout_height="36dp"
+       android:src="@drawable/shr_logo"/>
+
+    <TextView android:text="To: help@shrine.com"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:textSize="16dp"
+        android:paddingTop="10dp"/>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_marginTop="30dp"
+        android:layout_height="300dp"
+        app:cardElevation="8dp"
+        app:cardCornerRadius="10dp">
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:id="@+id/editText2"
+        android:backgroundTint="@color/white"
+        android:textSize="16dp"
+        android:hint="Enter your feedback here"
+        />
+
+    </android.support.v7.widget.CardView>
+
+    <Button        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send"
+        android:id="@+id/button"
+        android:singleLine="true"
+        android:layout_gravity="center"
+        android:layout_marginTop="36dp"
+        android:layout_centerVertical="true"
+        android:layout_alignLeft="@+id/editText2"
+        android:layout_alignStart="@+id/editText2" />
+
+</LinearLayout>

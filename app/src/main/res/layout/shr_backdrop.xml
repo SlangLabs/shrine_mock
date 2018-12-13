@@ -56,5 +56,11 @@
         android:layout_height="wrap_content"
         android:id="@+id/my_orders"
         android:text="@string/shr_my_orders_label" />
+    <android.support.design.button.MaterialButton
+        style="@style/Widget.Shrine.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/feedback"
+        android:text="@string/feedback" />
 
 </merge>

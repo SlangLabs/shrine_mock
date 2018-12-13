@@ -32,7 +32,7 @@ public class ProductGridFragment extends Fragment {
     StaggeredProductCardRecyclerViewAdapter mAdapter;
     RecyclerView recyclerView;
     List<ProductEntry> productList;
-    MaterialButton myAccount;
+    MaterialButton myAccount, feedback;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -56,6 +56,15 @@ public class ProductGridFragment extends Fragment {
                 /*Toast.makeText(v.getContext(), "IT WORKS OMG OMG", Toast.LENGTH_LONG).show();
                 Log.d(TAG, "******* Ready to navigate to new activity");*/
                 startActivity(new Intent(getActivity(), OrderListActivity.class));
+            }
+        });
+        feedback = view.findViewById(R.id.feedback);
+        feedback.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /*Toast.makeText(v.getContext(), "IT WORKS OMG OMG", Toast.LENGTH_LONG).show();
+                Log.d(TAG, "******* Ready to navigate to new activity");*/
+                startActivity(new Intent(getActivity(), FeedbackActivity.class));
             }
         });
 

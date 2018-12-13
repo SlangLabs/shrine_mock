@@ -27,5 +27,6 @@
     <string name="shr_dresses_label">Dresses</string>
     <string name="shr_account_label">My Account</string>
     <string name="shr_my_orders_label">My Orders</string>
+    <string name="feedback">Send Feedback</string>
     <string name="shr_contact_label">Contact Us</string>
 </resources>
