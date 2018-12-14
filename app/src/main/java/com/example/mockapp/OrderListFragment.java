@@ -71,7 +71,8 @@ public class OrderListFragment extends Fragment {
         if (mode!=null) {
             if (mode.equals(ActivityDetector.MODE_TRACK_PRODUCT)
                     || mode.equals(ActivityDetector.MODE_REFUND_PRODUCT)
-                    || mode.equals(ActivityDetector.MODE_RETURN_PRODUCT)) {
+                    || mode.equals(ActivityDetector.MODE_RETURN_PRODUCT)
+                    || mode.equals(ActivityDetector.MODE_CANCEL)) {
                 Log.d(TAG, "Mode is ActivityDetector.MODE_TRACK_PRODUCT");
                 orderList = bundle.getParcelableArrayList(ActivityDetector.ORDER_LIST);
                 //TODO implement multi-modal approach by letting Slang know when user clicks on an item
