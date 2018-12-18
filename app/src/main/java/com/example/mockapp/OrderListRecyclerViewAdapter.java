@@ -15,21 +15,30 @@ import android.widget.Toast;
 
 import com.example.mockapp.network.OrderEntry;
 import com.example.mockapp.network.OrderList;
+import com.example.mockapp.slang.ActivityDetector;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import in.slanglabs.platform.application.SlangApplicationUninitializedException;
+import in.slanglabs.platform.application.SlangUnregisteredIntentException;
+import in.slanglabs.platform.ui.SlangScreenContext;
 
 public class OrderListRecyclerViewAdapter extends RecyclerView.Adapter<OrderListRecyclerViewAdapter.OrderListCardViewHolder> {
     private List<OrderList> orderList;
 
     private final static String TAG = OrderListRecyclerViewAdapter.class.getSimpleName();
 
-    private OrderClickListener orderClickListener;
+    //private OrderClickListener orderClickListener;
     private Context context;
+    String mode;
 
-    public OrderListRecyclerViewAdapter(Context context, List<OrderList> orderList) {
+    public OrderListRecyclerViewAdapter(Context context, List<OrderList> orderList, String mode) {
         this.orderList = orderList;
         this.context = context;
+        this.mode = mode;
     }
 
     @NonNull
@@ -56,23 +65,62 @@ public class OrderListRecyclerViewAdapter extends RecyclerView.Adapter<OrderList
             final List<OrderEntry> entries = order.items;
             OrderListInnerRecyclerViewAdapter adapter = new OrderListInnerRecyclerViewAdapter(context, entries);
 
-            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
+            final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
 
             orderListCardViewHolder.orderEntryRecyclerView.setLayoutManager(linearLayoutManager);
             orderListCardViewHolder.orderEntryRecyclerView.setHasFixedSize(true);
             orderListCardViewHolder.orderEntryRecyclerView.setAdapter(adapter);
 
+            //TODO make multi modal (for cancelling or returns)
+            //TODO use Slang class and Map thing here
             adapter.setOrderClickListener(new OrderListInnerRecyclerViewAdapter.OrderInnerClickListener() {
                 @Override
                 public void onOrderClick(View view, int position) {
-                    Log.d(TAG, "******** Click on OrderListRecyclerViewAdapter");
-                    Toast.makeText(context, "From OrderListRecyclerViewAdapter", Toast.LENGTH_LONG).show();
+                    Log.d(TAG, "Click on OrderListRecyclerViewAdapter");
+                    Log.d(TAG, "Position clicked is " + (position+1));
+                    //Toast.makeText(context, "From OrderListRecyclerViewAdapter", Toast.LENGTH_LONG).show();
                     Bundle bundle = new Bundle();
-                    bundle.putParcelableArrayList("entry", (ArrayList<OrderEntry>) entries);
-                    bundle.putString("number", number);
-                    bundle.putString("date", date);
+                    List<OrderEntry> list = new ArrayList<>();
+                    list.add(entries.get(position));
+                    bundle.putParcelableArrayList(
+                            ActivityDetector.ORDER_ENTRY_LIST, (ArrayList<OrderEntry>) list
+                    );
+                    bundle.putString(ActivityDetector.ORDER_NUMBER, number);
+                    bundle.putString(ActivityDetector.ORDER_DATE, date);
+                    bundle.putString(ActivityDetector.ACTIVITY_MODE, mode);
                     OrderEntryFragment orderEntryFragment = new OrderEntryFragment();
                     orderEntryFragment.setArguments(bundle);
+                    SlangScreenContext.getInstance().notifyEntityResolved(
+                            ActivityDetector.ENTITY_COLOR, list.get(0).color
+                    );
+                    SlangScreenContext.getInstance().notifyEntityResolved(
+                            ActivityDetector.ENTITY_BRAND, list.get(0).brand
+                    );
+                    /*Map<String, String> entity = new HashMap<>();
+                    entity.put(ActivityDetector.ENTITY_PRODUCT, list.get(0).title);
+                    entity.put(ActivityDetector.ENTITY_BRAND, list.get(0).brand);
+                    entity.put(ActivityDetector.ENTITY_COLOR, list.get(0).color);
+                    if (!mode.equals(ActivityDetector.MODE_NONE)){
+                        if (mode.equals(ActivityDetector.MODE_TRACK_PRODUCT)) {
+                            try {
+                                SlangScreenContext.getInstance().startIntent(ActivityDetector.INTENT_TRACK_PRODUCT, entity);
+                            } catch (SlangApplicationUninitializedException e) {
+                                e.printStackTrace();
+                            } catch (SlangUnregisteredIntentException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        *//*SlangScreenContext.getInstance().notifyIntentStarted(ActivityDetector.INTENT_TRACK_PRODUCT);
+                        SlangScreenContext.getInstance().notifyEntityResolved(
+                                ActivityDetector.ENTITY_PRODUCT, list.get(0).title
+                        );
+                        SlangScreenContext.getInstance().notifyEntityResolved(
+                                ActivityDetector.ENTITY_BRAND, list.get(0).brand
+                        );
+                        SlangScreenContext.getInstance().notifyEntityResolved(
+                                ActivityDetector.ENTITY_COLOR, list.get(0).color
+                        );*//*
+                    }*/
                     ((NavigationHost) context).navigateTo(orderEntryFragment, true);
                 }
             });
@@ -87,7 +135,8 @@ public class OrderListRecyclerViewAdapter extends RecyclerView.Adapter<OrderList
             return orderList.size();
     }
 
-    public class OrderListCardViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class OrderListCardViewHolder extends RecyclerView.ViewHolder {
+            //implements View.OnClickListener {
 
         public TextView orderNumber;
         public TextView orderDate;
@@ -99,20 +148,20 @@ public class OrderListRecyclerViewAdapter extends RecyclerView.Adapter<OrderList
             orderNumber = itemView.findViewById(R.id.order_number);
             orderDate = itemView.findViewById(R.id.order_date);
             orderEntryRecyclerView = itemView.findViewById(R.id.recycler_view_order_list_card);
-            itemView.setOnClickListener(this);
+            //itemView.setOnClickListener(this);
         }
 
-        @Override
+        /*@Override
         public void onClick(View v) {
             orderClickListener.onOrderClick(v,getAdapterPosition());
-        }
+        }*/
     }
 
-    public void setOrderClickListener(OrderClickListener orderClickListener) {
+    /*public void setOrderClickListener(OrderClickListener orderClickListener) {
         this.orderClickListener = orderClickListener;
     }
 
     public interface OrderClickListener {
         void onOrderClick(View view, int position);
-    }
+    }*/
 }

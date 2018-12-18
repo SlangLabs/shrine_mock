@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,10 +20,12 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 
 
 import com.example.mockapp.network.ProductEntry;
+import com.example.mockapp.slang.ActivityDetector;
 import com.example.mockapp.staggeredgridlayout.StaggeredProductCardRecyclerViewAdapter;
 
 import java.util.List;
 
+import in.slanglabs.platform.ui.SlangScreenContext;
 import in.slanglabs.platform.ui.SlangUI;
 
 public class ProductGridFragment extends Fragment {
@@ -32,7 +35,7 @@ public class ProductGridFragment extends Fragment {
     StaggeredProductCardRecyclerViewAdapter mAdapter;
     RecyclerView recyclerView;
     List<ProductEntry> productList;
-    MaterialButton myAccount, feedback;
+    MaterialButton myOrders, feedback;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -42,19 +45,17 @@ public class ProductGridFragment extends Fragment {
 
     @Override
     public View onCreateView(
-            @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            @NonNull final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment with the ProductGrid theme
         View view = inflater.inflate(R.layout.shr_product_grid_fragment, container, false);
 
         // Set up the tool bar
         setUpToolbar(view);
 
-        myAccount = view.findViewById(R.id.my_orders);
-        myAccount.setOnClickListener(new View.OnClickListener() {
+        myOrders = view.findViewById(R.id.my_orders);
+        myOrders.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*Toast.makeText(v.getContext(), "IT WORKS OMG OMG", Toast.LENGTH_LONG).show();
-                Log.d(TAG, "******* Ready to navigate to new activity");*/
                 startActivity(new Intent(getActivity(), OrderListActivity.class));
             }
         });
@@ -62,8 +63,6 @@ public class ProductGridFragment extends Fragment {
         feedback.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*Toast.makeText(v.getContext(), "IT WORKS OMG OMG", Toast.LENGTH_LONG).show();
-                Log.d(TAG, "******* Ready to navigate to new activity");*/
                 startActivity(new Intent(getActivity(), FeedbackActivity.class));
             }
         });
@@ -93,6 +92,7 @@ public class ProductGridFragment extends Fragment {
 
         setClickProduct();
 
+        Log.d(TAG, "Calling show trigger");
         SlangUI.showTrigger();
 
         return view;

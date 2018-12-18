@@ -27,6 +27,10 @@ import com.example.mockapp.slang.ActivityDetector;
 import java.util.ArrayList;
 import java.util.List;
 
+import in.slanglabs.platform.application.SlangApplication;
+import in.slanglabs.platform.session.SlangResolvedIntent;
+import in.slanglabs.platform.ui.SlangScreenContext;
+
 public class OrderListFragment extends Fragment {
 
     private static final String TAG = OrderListFragment.class.getSimpleName();
@@ -34,8 +38,8 @@ public class OrderListFragment extends Fragment {
     private OrderListRecyclerViewAdapter mAdapter;
     private RecyclerView recyclerViewOrder;
     private List<OrderList> orderList;
-
-    private MaterialButton featured;
+    //private boolean modeActivity;
+    private MaterialButton featured, feedback;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -55,12 +59,17 @@ public class OrderListFragment extends Fragment {
         featured.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*Toast.makeText(v.getContext(),"WE'RE GOING HOME", Toast.LENGTH_LONG).show();
-                Log.d(TAG, "******* Ready to go home");*/
-                Toast.makeText(v.getContext(),"WE'RE GOING HOME", Toast.LENGTH_LONG).show();
                 Intent startMainActivity = new Intent(getContext(), MainActivity.class);
                 startMainActivity.putExtra("back", true);
                 startActivity(startMainActivity);
+            }
+        });
+
+        feedback = view.findViewById(R.id.feedback);
+        feedback.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getActivity(), FeedbackActivity.class));
             }
         });
 
@@ -68,14 +77,15 @@ public class OrderListFragment extends Fragment {
         String mode = "";
         if (bundle != null)
             mode = bundle.getString(ActivityDetector.ACTIVITY_MODE);
-        if (mode!=null) {
+        else
+            mode = ActivityDetector.MODE_NONE;
+        if (!mode.isEmpty()) {
             if (mode.equals(ActivityDetector.MODE_TRACK_PRODUCT)
                     || mode.equals(ActivityDetector.MODE_REFUND_PRODUCT)
                     || mode.equals(ActivityDetector.MODE_RETURN_PRODUCT)
                     || mode.equals(ActivityDetector.MODE_CANCEL)) {
                 Log.d(TAG, "Mode is ActivityDetector.MODE_TRACK_PRODUCT");
                 orderList = bundle.getParcelableArrayList(ActivityDetector.ORDER_LIST);
-                //TODO implement multi-modal approach by letting Slang know when user clicks on an item
             } else {
                 orderList = OrderList.initOrderList(getResources());
             }
@@ -88,26 +98,30 @@ public class OrderListFragment extends Fragment {
         recyclerViewOrder.setHasFixedSize(true);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
         recyclerViewOrder.setLayoutManager(linearLayoutManager);
-        mAdapter = new OrderListRecyclerViewAdapter(getContext(), orderList);
+        mAdapter = new OrderListRecyclerViewAdapter(getContext(), orderList, mode);
         recyclerViewOrder.setAdapter(mAdapter);
-        mAdapter.setOrderClickListener(new OrderListRecyclerViewAdapter.OrderClickListener() {
+        final Bundle bundleSend = new Bundle();
+        bundleSend.putString(ActivityDetector.ACTIVITY_MODE, mode);
+        //final String modeContext = mode;
+        /*mAdapter.setOrderClickListener(new OrderListRecyclerViewAdapter.OrderClickListener() {
             @Override
             public void onOrderClick(View view, int position) {
-                Log.d(TAG, "******** Click on OrderListFragment");
+                Log.d(TAG, "Click on OrderListFragment");
                 Toast.makeText(getContext(), "From OrderListFragment", Toast.LENGTH_LONG).show();
                 OrderList orders = orderList.get(position);
                 List<OrderEntry> entries = orders.items;
-                Bundle bundle = new Bundle();
                 String orderString = "Order#: " + orders.order_number;
-                String orderDate = "Order Date: " + orders.order_date;
-                bundle.putParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST, (ArrayList<OrderEntry>) entries);
-                bundle.putString(ActivityDetector.ORDER_NUMBER, orderString);
-                bundle.putString(ActivityDetector.ORDER_DATE, orderDate);
+                String order_date = "Order Date: " + orders.order_date;
+                bundleSend.putParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST, (ArrayList<OrderEntry>) entries);
+                bundleSend.putString(ActivityDetector.ORDER_NUMBER, orderString);
+                bundleSend.putString(ActivityDetector.ORDER_DATE, order_date);
                 OrderEntryFragment orderEntryFragment = new OrderEntryFragment();
-                orderEntryFragment.setArguments(bundle);
+                orderEntryFragment.setArguments(bundleSend);
+                *//*if (modeContext.equals(ActivityDetector.MODE_TRACK_PRODUCT))
+                    SlangScreenContext.getInstance().notifyEntityResolved();*//*
                 ((NavigationHost) getActivity()).navigateTo(orderEntryFragment, true);
             }
-        });
+        });*/
         return view;
     }
 

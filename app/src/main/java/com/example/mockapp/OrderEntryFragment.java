@@ -24,12 +24,15 @@ import com.example.mockapp.slang.ActivityDetector;
 
 import java.util.List;
 
+import in.slanglabs.platform.ui.SlangScreenContext;
+
 
 public class OrderEntryFragment extends Fragment {
     private static final String TAG = OrderEntryFragment.class.getSimpleName();
 
+    //TODO remove recyclerview and instead use linearlayout from item xml file to show data
     private MaterialButton featured;
-    private MaterialButton myAccount;
+    private MaterialButton myAccount, feedback;
     private RecyclerView recyclerView;
     private OrderEntryRecyclerViewAdapter mAdapter;
     private String orderNumber;
@@ -38,7 +41,7 @@ public class OrderEntryFragment extends Fragment {
     private TextView orderNum;
     private TextView date;
     private ImageView cancelled;
-    //private String mode;
+    private String mode;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -47,7 +50,7 @@ public class OrderEntryFragment extends Fragment {
 
         Bundle bundle = getArguments();
         if (bundle != null) {
-            //mode = bundle.getString(ActivityDetector.ACTIVITY_MODE);
+            mode = bundle.getString(ActivityDetector.ACTIVITY_MODE);
             orderNumber = bundle.getString(ActivityDetector.ORDER_NUMBER);
             orderDate = bundle.getString(ActivityDetector.ORDER_DATE);
             orderEntries = bundle.getParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST);
@@ -63,9 +66,6 @@ public class OrderEntryFragment extends Fragment {
         setUpToolbar(view);
 
         featured = view.findViewById(R.id.featured);
-
-
-
         featured.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -82,6 +82,14 @@ public class OrderEntryFragment extends Fragment {
             }
         });
 
+        feedback = view.findViewById(R.id.feedback);
+        feedback.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getActivity(), FeedbackActivity.class));
+            }
+        });
+
         orderNum = view.findViewById(R.id.order_entry_number);
         date = view.findViewById(R.id.order_entry_date);
         recyclerView = view.findViewById(R.id.recycler_view_order_entry);
@@ -90,8 +98,9 @@ public class OrderEntryFragment extends Fragment {
         date.setText(orderDate);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(linearLayoutManager);
-        mAdapter = new OrderEntryRecyclerViewAdapter(getContext(), orderEntries);
+        mAdapter = new OrderEntryRecyclerViewAdapter(getContext(), orderEntries, mode);
         recyclerView.setAdapter(mAdapter);
+        SlangScreenContext.getInstance().notifyIntentFinished();
         return view;
     }
 

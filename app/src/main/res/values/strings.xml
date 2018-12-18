@@ -17,6 +17,10 @@
     <string name="shr_order_number">Order Number</string>
     <string name="shr_order_date">Order Date</string>
 
+    <string name="cancelled">Cancelled</string>
+    <string name="cancel">Cancel</string>
+    <string name="returned">Awaiting item pickup for return</string>
+
     <!-- Shrine backdrop menu labels -->
     <string name="shr_featured_label">Featured</string>
     <string name="shr_apartment_label">Apartment</string>

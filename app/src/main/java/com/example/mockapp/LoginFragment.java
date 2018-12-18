@@ -8,6 +8,7 @@ import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +20,8 @@ import in.slanglabs.platform.ui.SlangUI;
  * Fragment representing the login screen for Shrine.
  */
 public class LoginFragment extends Fragment {
+
+    public static final String TAG = LoginFragment.class.getSimpleName();
 
     @Override
     public View onCreateView(
@@ -37,7 +40,6 @@ public class LoginFragment extends Fragment {
                     passwordTextInput.setError(getString(R.string.shr_error_password));
                 } else {
                     passwordTextInput.setError(null); // Clear the error
-                    //TODO use this to go from OrderList to individual orders
                     ((NavigationHost) getActivity()).navigateTo(new ProductGridFragment(), false); // Navigate to the next Fragment
                 }
             }
@@ -54,6 +56,7 @@ public class LoginFragment extends Fragment {
             }
         });
 
+        Log.d(TAG, "Calling hide trigger");
         SlangUI.hideTrigger();
 
         return view;

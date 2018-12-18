@@ -72,6 +72,7 @@
                 android:text="@string/shr_order_date"
                 android:textAppearance="?attr/textAppearanceBody1" />
 
+        <!--TODO remove Recyclerview and include the item layout here-->
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/recycler_view_order_entry"
                 android:layout_width="match_parent"

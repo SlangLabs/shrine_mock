@@ -68,7 +68,6 @@ public class StaggeredProductCardRecyclerViewAdapter extends
     }
 
     public void setmClickListener(StaggeredProductCardRecyclerViewAdapter.ProductClickListener productClickListener) {
-        Log.d(TAG, "******** setmClickListener");
         mClickListener = productClickListener;
     }
 
