@@ -55,7 +55,7 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                         break;
                     case ActivityDetector.MODE_TRACK_DEFAULT:
                     case ActivityDetector.MODE_TRACK_PRODUCT:
-                        OrderEntryFragment fragment = new OrderEntryFragment();
+                        OrderEntryFragment orderEntryFragment = new OrderEntryFragment();
                         orderList = intent.getParcelableArrayListExtra(ActivityDetector.ORDER_LIST);
                         if (mode.equals(ActivityDetector.MODE_TRACK_DEFAULT)) {
                             bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_DEFAULT);
@@ -64,17 +64,17 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                         // truncate the list to show only the first item
                         list = orderList.get(0).items;
                         bundle.putParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST, (ArrayList<OrderEntry>) list);
-                        fragment.setArguments(bundle);
+                        orderEntryFragment.setArguments(bundle);
                         getSupportFragmentManager()
                                 .beginTransaction()
-                                .add(R.id.orderListContainer, fragment)
+                                .add(R.id.orderListContainer, orderEntryFragment)
                                 .commit();
                         }
                         else {
                             bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_PRODUCT);
                             if (orderList.size() > 1) {
                                 orderListFragment = new OrderListFragment();
-                                bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_PRODUCT);
+                                //bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_PRODUCT);
                                 bundle.putParcelableArrayList(ActivityDetector.ORDER_LIST,
                                         (ArrayList<OrderList>) orderList);
                                 orderListFragment.setArguments(bundle);
@@ -89,10 +89,10 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                                 // truncate the list to show only the first item
                                 list = orderList.get(0).items;
                                 bundle.putParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST, (ArrayList<OrderEntry>) list);
-                                fragment.setArguments(bundle);
+                                orderEntryFragment.setArguments(bundle);
                                 getSupportFragmentManager()
                                         .beginTransaction()
-                                        .add(R.id.orderListContainer, fragment)
+                                        .add(R.id.orderListContainer, orderEntryFragment)
                                         .commit();
                             }
                         }
@@ -230,16 +230,16 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                                 break;
                             }
                         }
-                        fragment = new OrderEntryFragment();
+                        orderEntryFragment = new OrderEntryFragment();
                         bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_PRODUCT);
                         bundle.putString(ActivityDetector.ORDER_NUMBER, "Order#: " + orders.get(0).order_number);
                         bundle.putString(ActivityDetector.ORDER_DATE, "Order Date: " + orders.get(0).order_date);
                         bundle.putParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST,
                                 (ArrayList<OrderEntry>) orders.get(0).items);
-                        fragment.setArguments(bundle);
+                        orderEntryFragment.setArguments(bundle);
                         getSupportFragmentManager()
                                 .beginTransaction()
-                                .add(R.id.orderListContainer, fragment)
+                                .add(R.id.orderListContainer, orderEntryFragment)
                                 .commit();
                         break;
                     case ActivityDetector.MODE_REFUND_PRODUCT:
@@ -311,16 +311,16 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                                 break;
                             case 1:
                                 //Toast.makeText(this, "It is the unique case, showing product", Toast.LENGTH_LONG).show();
-                                fragment = new OrderEntryFragment();
+                                orderEntryFragment = new OrderEntryFragment();
                                 bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_REFUND_PRODUCT);
                                 bundle.putString(ActivityDetector.ORDER_NUMBER, "Order#: " + orders.get(0).order_number);
                                 bundle.putString(ActivityDetector.ORDER_DATE, "Order Date: " + orders.get(0).order_date);
                                 bundle.putParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST,
                                         (ArrayList<OrderEntry>) orders.get(0).items);
-                                fragment.setArguments(bundle);
+                                orderEntryFragment.setArguments(bundle);
                                 getSupportFragmentManager()
                                         .beginTransaction()
-                                        .add(R.id.orderListContainer, fragment)
+                                        .add(R.id.orderListContainer, orderEntryFragment)
                                         .commit();
                                 break;
                             default:
@@ -358,16 +358,16 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                                 break;
                             }
                         }
-                        fragment = new OrderEntryFragment();
+                        orderEntryFragment = new OrderEntryFragment();
                         bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_PRODUCT);
                         bundle.putString(ActivityDetector.ORDER_NUMBER, "Order#: " + orders.get(0).order_number);
                         bundle.putString(ActivityDetector.ORDER_DATE, "Order Date: " + orders.get(0).order_date);
                         bundle.putParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST,
                                 (ArrayList<OrderEntry>) orders.get(0).items);
-                        fragment.setArguments(bundle);
+                        orderEntryFragment.setArguments(bundle);
                         getSupportFragmentManager()
                                 .beginTransaction()
-                                .add(R.id.orderListContainer, fragment)
+                                .add(R.id.orderListContainer, orderEntryFragment)
                                 .commit();
                         break;
                     case ActivityDetector.MODE_RETURN_PRODUCT:
@@ -440,16 +440,16 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                                 break;
                             case 1:
                                 Toast.makeText(this, "Your order will be returned", Toast.LENGTH_LONG).show();
-                                fragment = new OrderEntryFragment();
+                                orderEntryFragment = new OrderEntryFragment();
                                 bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_RETURN_PRODUCT);
                                 bundle.putString(ActivityDetector.ORDER_NUMBER, "Order#: " + orders.get(0).order_number);
                                 bundle.putString(ActivityDetector.ORDER_DATE, "Order Date: " + orders.get(0).order_date);
                                 bundle.putParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST,
                                         (ArrayList<OrderEntry>) orders.get(0).items);
-                                fragment.setArguments(bundle);
+                                orderEntryFragment.setArguments(bundle);
                                 getSupportFragmentManager()
                                         .beginTransaction()
-                                        .add(R.id.orderListContainer, fragment)
+                                        .add(R.id.orderListContainer, orderEntryFragment)
                                         .commit();
                                 break;
                             default:
@@ -539,16 +539,16 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                                 break;
                             case 1:
                                 Toast.makeText(this, "Your order will be cancelled", Toast.LENGTH_LONG).show();
-                                fragment = new OrderEntryFragment();
+                                orderEntryFragment = new OrderEntryFragment();
                                 bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_CANCEL);
                                 bundle.putString(ActivityDetector.ORDER_NUMBER, "Order#: " + orders.get(0).order_number);
                                 bundle.putString(ActivityDetector.ORDER_DATE, "Order Date: " + orders.get(0).order_date);
                                 bundle.putParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST,
                                         (ArrayList<OrderEntry>) orders.get(0).items);
-                                fragment.setArguments(bundle);
+                                orderEntryFragment.setArguments(bundle);
                                 getSupportFragmentManager()
                                         .beginTransaction()
-                                        .add(R.id.orderListContainer, fragment)
+                                        .add(R.id.orderListContainer, orderEntryFragment)
                                         .commit();
                                 break;
                             default:

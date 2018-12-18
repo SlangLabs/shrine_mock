@@ -3,11 +3,16 @@ package com.example.mockapp.slang;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Intent;
+import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.widget.Toast;
 
 
+import com.example.mockapp.OrderEntryFragment;
 import com.example.mockapp.OrderListActivity;
+import com.example.mockapp.R;
 import com.example.mockapp.network.OrderEntry;
 import com.example.mockapp.network.OrderList;
 
@@ -18,23 +23,21 @@ import in.slanglabs.platform.application.ISlangApplicationStateListener;
 import in.slanglabs.platform.application.SlangApplication;
 import in.slanglabs.platform.application.SlangApplicationUninitializedException;
 import in.slanglabs.platform.application.actions.DefaultResolvedIntentAction;
-import in.slanglabs.platform.application.actions.ISlangResolvedIntentAction;
 import in.slanglabs.platform.session.SlangEntity;
-import in.slanglabs.platform.session.SlangIntent;
 import in.slanglabs.platform.session.SlangResolvedIntent;
 import in.slanglabs.platform.session.SlangSession;
 import in.slanglabs.platform.ui.SlangScreenContext;
 
 public class VoiceInterface {
 
-    static Application appContext;
+    private static Application appContext;
     private static final String TAG = VoiceInterface.class.getSimpleName();
     private static List<OrderList> orderList;
     private static List<OrderList> orders;
     private static List<String> colorList, brandList;
     private static int num, brandNum, colorNum;
 
-    public static void init(final Application appContext, String appId, String authKey, final boolean shouldHide) {
+    public static void init(final Application appContext, String appId, String authKey) {
         VoiceInterface.appContext = appContext;
         orderList = OrderList.initOrderList(appContext.getResources());
         orders = new ArrayList<>();
@@ -54,7 +57,7 @@ public class VoiceInterface {
             @Override
             public void onInitializationFailed(FailureReason failureReason) {
                 Toast.makeText(appContext, "Not able to initialize", Toast.LENGTH_LONG).show();
-                Log.d(TAG, "________________ " + failureReason);
+                Log.d(TAG, "Failure Reason: " + failureReason);
             }
         });
 
@@ -66,20 +69,11 @@ public class VoiceInterface {
                     @Override
                     public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
                         Log.d(TAG, "Slang Triggering Default Track Intent");
-                        return trackDefault(slangResolvedIntent, slangSession, ActivityDetector.MODE_TRACK_DEFAULT);
+                        return trackDefault(slangSession, ActivityDetector.MODE_TRACK_DEFAULT);
                     }
                 });
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_PRODUCT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
-                    /*@Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
-                        if (slangResolvedIntent.getEntity(ActivityDetector.ENTITY_PRODUCT).isResolved()) {
-                            Log.d(TAG, "Slang Triggering Product Track Intent");
-                            return trackProduct(slangResolvedIntent, slangSession);
-                        }
-                        return slangSession.failure();
-                    }*/
-
                     @Override
                     public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent, SlangSession session) {
                         orders.clear();
@@ -102,13 +96,11 @@ public class VoiceInterface {
                                     entity.resolve(orders.get(0).items.get(0).color);
                                 }
                                 else {
-                                    if (!(activity instanceof OrderListActivity)) {
                                         Intent intent = new Intent(appContext, OrderListActivity.class);
                                         intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_PRODUCT);
                                         intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
                                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                         appContext.startActivity(intent);
-                                    }
                                 }
                                 return session.success();
                             case ActivityDetector.ENTITY_BRAND:
@@ -123,13 +115,11 @@ public class VoiceInterface {
                                     entity.resolve(orders.get(0).items.get(0).brand);
                                 }
                                 else {
-                                    if (!(activity instanceof OrderListActivity)) {
                                         Intent intent = new Intent(appContext, OrderListActivity.class);
                                         intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_PRODUCT);
                                         intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
                                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                         appContext.startActivity(intent);
-                                    }
                                 }
                                 return session.success();
                             default:
@@ -228,7 +218,7 @@ public class VoiceInterface {
                     @Override
                     public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
                         Log.d(TAG, "Slang Triggering All Track Intent");
-                        return trackDefault(slangResolvedIntent, slangSession, ActivityDetector.MODE_TRACK_ALL);
+                        return trackDefault(slangSession, ActivityDetector.MODE_TRACK_ALL);
                     }
                 });
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_REFUND_DEFAULT)
@@ -353,8 +343,7 @@ public class VoiceInterface {
                 });
     }
 
-    private static SlangSession.Status trackDefault(final SlangResolvedIntent slangResolvedIntent,
-                                                    final SlangSession slangSession, String mode) {
+    private static SlangSession.Status trackDefault(final SlangSession slangSession, String mode) {
         //final Activity activity = SlangScreenContext.getInstance().getCurrentActivity();
         List<OrderList> orderList = OrderList.initOrderList(appContext.getResources());
         Intent i = new Intent(appContext, OrderListActivity.class);
@@ -459,7 +448,7 @@ public class VoiceInterface {
                     Log.d(TAG, "Adding list of OrderEntries to list of orderList");
                 }
             }
-            Log.d(TAG, "______ value of num is " + num);
+            Log.d(TAG, "value of num is " + num);
         } else {
             if (num == 0) {
                 slangResolvedIntent.getCompletionStatement()
@@ -473,231 +462,26 @@ public class VoiceInterface {
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     appContext.startActivity(intent);
                 }
+                else {
+                    FragmentManager fragmentManager = ((OrderListActivity) activity).getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    OrderEntryFragment fragment = new OrderEntryFragment();
+                    Bundle bundle = new Bundle();
+                    bundle.putString(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_PRODUCT);
+                    bundle.putString(ActivityDetector.ORDER_NUMBER, "Order#: " + orders.get(0).order_number);
+                    bundle.putString(ActivityDetector.ORDER_DATE, "Order Date: " + orders.get(0).order_date);
+                    // truncate the list to show only the first item
+                    bundle.putParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST, (ArrayList<OrderEntry>) orders.get(0).items);
+                    fragment.setArguments(bundle);
+                    fragmentTransaction
+                            .add(R.id.orderListContainer, fragment)
+                            .commit();
+                    /*getSupportFragmentManager()
+                            .beginTransaction()
+                            .add(R.id.orderListContainer, fragment)
+                            .commit();*/
+                }
             }
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-        /*boolean again = true;
-        while (again) {
-            Log.d(TAG, "__________________Calling switch statement");
-            switch (num) {
-                case 0:
-                    Log.d(TAG, "______ none");
-                    slangResolvedIntent.getCompletionStatement()
-                            .overrideNegative("Sorry, no matching products found");
-                    return slangSession.failure();
-                case 1:
-                    Log.d(TAG, "______ one");
-                    Intent intent = new Intent(appContext, OrderListActivity.class);
-                    intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_PRODUCT);
-                    intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    appContext.startActivity(intent);
-                    return slangSession.success();
-                default:
-                    Log.d(TAG, "______ multiple");
-
-
-                    //to check which entities were present, call isEmpty() or null comparison
-
-
-                    //both entities were not provided by the user
-                    if (colorList.size() > 0 && brandList.size() > 0) {
-                        //color is the more common factor
-                        if (colorNum >= brandNum) {
-                            Log.d(TAG, "colorNum > brandNum");
-                            boolean unresolved = true;
-                            while (unresolved) {
-                                slangResolvedIntent.getEntity(ActivityDetector.ENTITY_BRAND).getPrompt().getQuestion();
-                                if (slangResolvedIntent.getEntity(ActivityDetector.ENTITY_BRAND).isResolved()) {
-                                    unresolved = false;
-                                    productColor = slangResolvedIntent.getEntity(ActivityDetector.ENTITY_BRAND).getValue();
-                                    int sizeOut = orders.size();
-                                    for (int i = 0; i < sizeOut; i++) {
-                                        list = orders.get(i).items;
-                                        int sizeIn = list.size();
-                                        boolean delete = false;
-                                        for (int j = 0; j < sizeIn; j++) {
-                                            OrderEntry entry = list.get(j);
-                                            String brand = entry.brand;
-                                            if (!productColor.equalsIgnoreCase(brand)) {
-                                                //this operation is call by reference
-                                                list.remove(j);
-                                                sizeIn--;
-                                                j--;
-                                            }
-                                            if (sizeIn == 0) {
-                                                delete = true;
-                                                break;
-                                            }
-                                        }
-                                        //to remove the order number and date details if inner list is empty
-                                        if (delete) {
-                                            orders.remove(i);
-                                            sizeOut--;
-                                            i--;
-                                        }
-                                        if (sizeOut == 0)
-                                            break;
-                                    }
-                                    num = orders.size();
-                                    brandNum = -1;
-
-                                    //update value of num to size of orders, and use continue to go back to beginning of switch statement.
-                                    // Do not launch another activity, just update the one presently on screen (RunOnUIThread?)
-                                }
-                            }
-                            break;
-                        } else {
-                            Log.d(TAG, "colorNum < brandNum");
-                            boolean unresolved = true;
-                            while (unresolved) {
-                                slangResolvedIntent.getEntity(ActivityDetector.ENTITY_COLOR).getPrompt().getQuestion();
-                                if (slangResolvedIntent.getEntity(ActivityDetector.ENTITY_COLOR).isResolved()) {
-                                    unresolved = false;
-                                    productColor = slangResolvedIntent.getEntity(ActivityDetector.ENTITY_COLOR).getValue();
-                                    int sizeOut = orders.size();
-                                    for (int i = 0; i < sizeOut; i++) {
-                                        list = orders.get(i).items;
-                                        int sizeIn = list.size();
-                                        boolean delete = false;
-                                        for (int j = 0; j < sizeIn; j++) {
-                                            OrderEntry entry = list.get(j);
-                                            String color = entry.color;
-                                            if (!productColor.equalsIgnoreCase(color)) {
-                                                //this operation is call by reference
-                                                list.remove(j);
-                                                sizeIn--;
-                                                j--;
-                                            }
-                                            if (sizeIn == 0) {
-                                                delete = true;
-                                                break;
-                                            }
-                                        }
-                                        //to remove the order number and date details if inner list is empty
-                                        if (delete) {
-                                            orders.remove(i);
-                                            sizeOut--;
-                                            i--;
-                                        }
-                                        if (sizeOut == 0)
-                                            break;
-                                    }
-                                    num = orders.size();
-                                    colorNum = -1;
-                                }
-                            }
-
-                            break;
-                        }
-                    }
-                    // only color not provided by the user
-                    else if (colorList.size() > 0) {
-                        boolean unresolved = true;
-                        while (unresolved) {
-                            slangResolvedIntent.getEntity(ActivityDetector.ENTITY_COLOR).getPrompt().getQuestion();
-                            if (slangResolvedIntent.getEntity(ActivityDetector.ENTITY_COLOR).isResolved()) {
-                                unresolved = false;
-                                productColor = slangResolvedIntent.getEntity(ActivityDetector.ENTITY_COLOR).getValue();
-                                int sizeOut = orders.size();
-                                for (int i = 0; i < sizeOut; i++) {
-                                    list = orders.get(i).items;
-                                    int sizeIn = list.size();
-                                    boolean delete = false;
-                                    for (int j = 0; j < sizeIn; j++) {
-                                        OrderEntry entry = list.get(j);
-                                        String color = entry.color;
-                                        if (!productColor.equalsIgnoreCase(color)) {
-                                            //this operation is call by reference
-                                            list.remove(j);
-                                            sizeIn--;
-                                            j--;
-                                        }
-                                        if (sizeIn == 0) {
-                                            delete = true;
-                                            break;
-                                        }
-                                    }
-                                    //to remove the order number and date details if inner list is empty
-                                    if (delete) {
-                                        orders.remove(i);
-                                        sizeOut--;
-                                        i--;
-                                    }
-                                    if (sizeOut == 0)
-                                        break;
-                                }
-                                colorList.clear();
-                                num = orders.size();
-                            }
-                        }
-                        break;
-                    }
-                    // only brand not provided by the user
-                    else if (brandList.size() > 0) {
-                        boolean unresolved = true;
-                        while (unresolved) {
-                            slangResolvedIntent.getEntity(ActivityDetector.ENTITY_BRAND).getPrompt().getQuestion();
-                            if (slangResolvedIntent.getEntity(ActivityDetector.ENTITY_BRAND).isResolved()) {
-                                unresolved = false;
-                                productColor = slangResolvedIntent.getEntity(ActivityDetector.ENTITY_BRAND).getValue();
-                                int sizeOut = orders.size();
-                                for (int i = 0; i < sizeOut; i++) {
-                                    list = orders.get(i).items;
-                                    int sizeIn = list.size();
-                                    boolean delete = false;
-                                    for (int j = 0; j < sizeIn; j++) {
-                                        OrderEntry entry = list.get(j);
-                                        String brand = entry.brand;
-                                        if (!productColor.equalsIgnoreCase(brand)) {
-                                            //this operation is call by reference
-                                            list.remove(j);
-                                            sizeIn--;
-                                            j--;
-                                        }
-                                        if (sizeIn == 0) {
-                                            delete = true;
-                                            break;
-                                        }
-                                    }
-                                    //to remove the order number and date details if inner list is empty
-                                    if (delete) {
-                                        orders.remove(i);
-                                        sizeOut--;
-                                        i--;
-                                    }
-                                    if (sizeOut == 0)
-                                        break;
-                                }
-                                brandList.clear();
-                                num = orders.size();
-                            }
-                        }
-                        break;
-                    }
-                    else {
-                        activity.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(appContext, "Unhandled case, using date", Toast.LENGTH_LONG).show();
-                            }
-                        });
-                        break;
-                    }
-            }
-        }
-        Log.d(TAG, "____________ Out of switch");
-        return slangSession.suspend();*/
