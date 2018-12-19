@@ -90,12 +90,12 @@ public class OrderListRecyclerViewAdapter extends RecyclerView.Adapter<OrderList
                     bundle.putString(ActivityDetector.ACTIVITY_MODE, mode);
                     OrderEntryFragment orderEntryFragment = new OrderEntryFragment();
                     orderEntryFragment.setArguments(bundle);
-                    SlangScreenContext.getInstance().notifyEntityResolved(
+                    /*SlangScreenContext.getInstance().notifyEntityResolved(
                             ActivityDetector.ENTITY_COLOR, list.get(0).color
                     );
                     SlangScreenContext.getInstance().notifyEntityResolved(
                             ActivityDetector.ENTITY_BRAND, list.get(0).brand
-                    );
+                    );*/
                     /*Map<String, String> entity = new HashMap<>();
                     entity.put(ActivityDetector.ENTITY_PRODUCT, list.get(0).title);
                     entity.put(ActivityDetector.ENTITY_BRAND, list.get(0).brand);

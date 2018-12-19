@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -51,6 +52,7 @@ public class OrderEntryFragment extends Fragment {
         Bundle bundle = getArguments();
         if (bundle != null) {
             mode = bundle.getString(ActivityDetector.ACTIVITY_MODE);
+            Log.d(TAG, "Mode is " + mode);
             orderNumber = bundle.getString(ActivityDetector.ORDER_NUMBER);
             orderDate = bundle.getString(ActivityDetector.ORDER_DATE);
             orderEntries = bundle.getParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST);
@@ -100,7 +102,7 @@ public class OrderEntryFragment extends Fragment {
         recyclerView.setLayoutManager(linearLayoutManager);
         mAdapter = new OrderEntryRecyclerViewAdapter(getContext(), orderEntries, mode);
         recyclerView.setAdapter(mAdapter);
-        SlangScreenContext.getInstance().notifyIntentFinished();
+        //SlangScreenContext.getInstance().notifyIntentFinished();
         return view;
     }
 

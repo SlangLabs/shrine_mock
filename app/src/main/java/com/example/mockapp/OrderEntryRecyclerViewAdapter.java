@@ -1,9 +1,11 @@
 package com.example.mockapp;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.design.button.MaterialButton;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,8 +39,7 @@ public class OrderEntryRecyclerViewAdapter extends RecyclerView.Adapter<OrderEnt
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(layoutId, viewGroup, false);
 
-        OrderEntryViewHolder orderEntryViewHolder = new OrderEntryViewHolder(view);
-        return orderEntryViewHolder;
+        return new OrderEntryViewHolder(view);
     }
 
     @Override
@@ -50,7 +51,6 @@ public class OrderEntryRecyclerViewAdapter extends RecyclerView.Adapter<OrderEnt
             orderEntryViewHolder.title.setText(entry.title);
             orderEntryViewHolder.brand.setText(entry.brand);
             //TODO show alert dialog before cancelling/returning
-            //TODO make multi modal
             if (entry.delivered)
                 orderEntryViewHolder.cancelButton.setText("Return");
             else
@@ -58,32 +58,83 @@ public class OrderEntryRecyclerViewAdapter extends RecyclerView.Adapter<OrderEnt
             orderEntryViewHolder.cancelButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (entry.delivered) {
-                        orderEntryViewHolder.status.setText(R.string.returned);
-                        orderEntryViewHolder.status.setTextColor(Color.rgb(255, 102, 0));
-                        orderEntryViewHolder.cancelButton.setEnabled(false);
-                    }
-                    else {
-                        orderEntryViewHolder.cancelled.setVisibility(View.VISIBLE);
-                        orderEntryViewHolder.status.setText(R.string.cancelled);
-                        orderEntryViewHolder.status.setTextColor(Color.RED);
-                        orderEntryViewHolder.cancelButton.setEnabled(false);
-                    }
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setTitle("Confirmation for " + entry.title +" by " + entry.brand);
+                    builder.setMessage("Are you sure you want to proceed?");
+                    builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (entry.delivered) {
+                                orderEntryViewHolder.status.setText(R.string.returned);
+                                orderEntryViewHolder.status.setTextColor(Color.rgb(255, 102, 0));
+                                orderEntryViewHolder.cancelButton.setEnabled(false);
+                            } else {
+                                orderEntryViewHolder.cancelled.setVisibility(View.VISIBLE);
+                                orderEntryViewHolder.status.setText(R.string.cancelled);
+                                orderEntryViewHolder.status.setTextColor(Color.RED);
+                                orderEntryViewHolder.cancelButton.setEnabled(false);
+                            }
+                            dialog.dismiss();
+                        }
+                    });
+                    builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
                 }
             });
+
             String p = "INR " + entry.price;
             orderEntryViewHolder.price.setText(p);
             //TODO show this after a confirmation prompt
             if (mode.equals(ActivityDetector.MODE_CANCEL)) {
-                orderEntryViewHolder.cancelled.setVisibility(View.VISIBLE);
-                orderEntryViewHolder.status.setText(R.string.cancelled);
-                orderEntryViewHolder.status.setTextColor(Color.RED);
-                orderEntryViewHolder.cancelButton.setEnabled(false);
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setTitle("Confirmation");
+                builder.setMessage("Are you sure you want to proceed?");
+                builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        orderEntryViewHolder.cancelled.setVisibility(View.VISIBLE);
+                        orderEntryViewHolder.status.setText(R.string.cancelled);
+                        orderEntryViewHolder.status.setTextColor(Color.RED);
+                        orderEntryViewHolder.cancelButton.setEnabled(false);
+                        dialog.dismiss();
+                    }
+                });
+                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
             } else if(mode.equals(ActivityDetector.MODE_RETURN_PRODUCT)
                     || mode.equals(ActivityDetector.MODE_RETURN_DEFAULT)) {
-                orderEntryViewHolder.status.setText(R.string.returned);
-                orderEntryViewHolder.status.setTextColor(Color.rgb(255, 102, 0));
-                orderEntryViewHolder.cancelButton.setEnabled(false);
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setTitle("Confirmation");
+                builder.setMessage("Are you sure you want to proceed?");
+                builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        orderEntryViewHolder.status.setText(R.string.returned);
+                        orderEntryViewHolder.status.setTextColor(Color.rgb(255, 102, 0));
+                        orderEntryViewHolder.cancelButton.setEnabled(false);
+                        dialog.dismiss();
+                    }
+                });
+                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
             } else {
                 orderEntryViewHolder.status.setText(entry.status);
             }
