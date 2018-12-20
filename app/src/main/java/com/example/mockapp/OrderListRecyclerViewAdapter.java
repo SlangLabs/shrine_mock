@@ -71,14 +71,11 @@ public class OrderListRecyclerViewAdapter extends RecyclerView.Adapter<OrderList
             orderListCardViewHolder.orderEntryRecyclerView.setHasFixedSize(true);
             orderListCardViewHolder.orderEntryRecyclerView.setAdapter(adapter);
 
-            //TODO make multi modal (for cancelling or returns)
-            //TODO use Slang class and Map thing here
             adapter.setOrderClickListener(new OrderListInnerRecyclerViewAdapter.OrderInnerClickListener() {
                 @Override
                 public void onOrderClick(View view, int position) {
                     Log.d(TAG, "Click on OrderListRecyclerViewAdapter");
                     Log.d(TAG, "Position clicked is " + (position+1));
-                    //Toast.makeText(context, "From OrderListRecyclerViewAdapter", Toast.LENGTH_LONG).show();
                     Bundle bundle = new Bundle();
                     List<OrderEntry> list = new ArrayList<>();
                     list.add(entries.get(position));
@@ -90,37 +87,6 @@ public class OrderListRecyclerViewAdapter extends RecyclerView.Adapter<OrderList
                     bundle.putString(ActivityDetector.ACTIVITY_MODE, mode);
                     OrderEntryFragment orderEntryFragment = new OrderEntryFragment();
                     orderEntryFragment.setArguments(bundle);
-                    /*SlangScreenContext.getInstance().notifyEntityResolved(
-                            ActivityDetector.ENTITY_COLOR, list.get(0).color
-                    );
-                    SlangScreenContext.getInstance().notifyEntityResolved(
-                            ActivityDetector.ENTITY_BRAND, list.get(0).brand
-                    );*/
-                    /*Map<String, String> entity = new HashMap<>();
-                    entity.put(ActivityDetector.ENTITY_PRODUCT, list.get(0).title);
-                    entity.put(ActivityDetector.ENTITY_BRAND, list.get(0).brand);
-                    entity.put(ActivityDetector.ENTITY_COLOR, list.get(0).color);
-                    if (!mode.equals(ActivityDetector.MODE_NONE)){
-                        if (mode.equals(ActivityDetector.MODE_TRACK_PRODUCT)) {
-                            try {
-                                SlangScreenContext.getInstance().startIntent(ActivityDetector.INTENT_TRACK_PRODUCT, entity);
-                            } catch (SlangApplicationUninitializedException e) {
-                                e.printStackTrace();
-                            } catch (SlangUnregisteredIntentException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        *//*SlangScreenContext.getInstance().notifyIntentStarted(ActivityDetector.INTENT_TRACK_PRODUCT);
-                        SlangScreenContext.getInstance().notifyEntityResolved(
-                                ActivityDetector.ENTITY_PRODUCT, list.get(0).title
-                        );
-                        SlangScreenContext.getInstance().notifyEntityResolved(
-                                ActivityDetector.ENTITY_BRAND, list.get(0).brand
-                        );
-                        SlangScreenContext.getInstance().notifyEntityResolved(
-                                ActivityDetector.ENTITY_COLOR, list.get(0).color
-                        );*//*
-                    }*/
                     ((NavigationHost) context).navigateTo(orderEntryFragment, true);
                 }
             });

@@ -87,6 +87,24 @@
             android:text="@string/shr_order_delivery"
             android:textAppearance="?attr/textAppearanceBody2" />
 
+        <TextView
+            android:id="@+id/order_entry_return"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/shr_order_return"
+            android:textAppearance="?attr/textAppearanceBody2" />
+
+        <TextView
+            android:id="@+id/order_entry_pickup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/shr_order_pickup"
+            android:textAppearance="?attr/textAppearanceBody2" />
+
         <android.support.design.button.MaterialButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

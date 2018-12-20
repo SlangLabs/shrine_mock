@@ -14,10 +14,12 @@
     <string name="shr_order_status">Shipping</string>
     <string name="shr_order_location">Location</string>
     <string name="shr_order_delivery">Delivery Date</string>
+    <string name="shr_order_return">Return Date</string>
+    <string name="shr_order_pickup">Pick-up Date</string>
     <string name="shr_order_number">Order Number</string>
     <string name="shr_order_date">Order Date</string>
 
-    <string name="cancelled">Cancelled</string>
+    <string name="cancelled">Order cancelled</string>
     <string name="cancel">Cancel</string>
     <string name="returned">Awaiting item pickup for return</string>
 

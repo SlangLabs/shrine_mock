@@ -1,7 +1,7 @@
 [
   {
-    "order_number": "408-5656775-5046748",
-    "order_date": "2018-12-06",
+    "order_number": "408-5656775-5046751",
+    "order_date": "2018-12-18",
     "items": [
       {
         "item_number": 1,
@@ -14,13 +14,42 @@
         "location": "Warehouse",
         "delivered": false,
         "returned": false,
-        "delivery_date": ""
+        "pickup": false,
+        "cancelled": false,
+        "delivery_date": "",
+        "pickup_date": "",
+        "return_date": "",
+        "cancel_date": ""
       }
     ]
   },
   {
-    "order_number": "408-5656775-5046747",
-    "order_date": "2018-12-05",
+    "order_number": "408-5656775-5046750",
+    "order_date": "2018-12-15",
+    "items": [
+      {
+        "item_number": 1,
+        "title": "Full Sleeve Solid Men Jacket",
+        "url": "https://rukminim1.flixcart.com/image/880/1056/jnun1jk0/jacket/s/p/k/m-18a2fsic3000i-united-colors-of-benetton-original-imafaeubazybfk5a.jpeg",
+        "price": 2999,
+        "brand": "United Colors of Benetton",
+        "color": "Green",
+        "status": "Awaiting item pickup for return",
+        "location": "Delivery Address",
+        "delivered": true,
+        "returned": true,
+        "pickup": false,
+        "cancelled": true,
+        "delivery_date": "2018-12-17",
+        "pickup_date": "2018-12-23",
+        "return_date": "2018-12-20",
+        "cancel_date": ""
+      }
+    ]
+  },
+  {
+    "order_number": "408-5656775-5046749",
+    "order_date": "2018-12-13",
     "items": [
       {
         "item_number": 1,
@@ -33,7 +62,12 @@
         "location": "Lucknow Warehouse",
         "delivered": false,
         "returned": false,
-        "delivery_date": ""
+        "pickup": false,
+        "cancelled": false,
+        "delivery_date": "",
+        "pickup_date": "",
+        "return_date": "",
+        "cancel_date": ""
       },
       {
         "item_number": 2,
@@ -46,7 +80,60 @@
         "location": "Warehouse",
         "delivered": false,
         "returned": false,
-        "delivery_date": ""
+        "pickup": false,
+        "cancelled": false,
+        "delivery_date": "",
+        "pickup_date": "",
+        "return_date": "",
+        "cancel_date": ""
+      }
+    ]
+  },
+  {
+    "order_number": "408-5656775-5046748",
+    "order_date": "2018-12-08",
+    "items": [
+      {
+        "item_number": 1,
+        "title": "Slim Men's Grey Jeans",
+        "url": "https://rukminim1.flixcart.com/image/880/1056/jlph9jk0/jean/y/a/z/32-pm204291l454blue-pepe-jeans-original-imaf8rychprbfkcr.jpeg",
+        "price": 1079,
+        "brand": "Pepe",
+        "color": "Grey",
+        "status": "Order cancelled",
+        "location": "Warehouse",
+        "delivered": false,
+        "returned": false,
+        "pickup": false,
+        "cancelled": true,
+        "delivery_date": "",
+        "pickup_date": "",
+        "return_date": "",
+        "cancel_date": "2018-12-11"
+      }
+    ]
+  },
+  {
+    "order_number": "408-5656775-5046747",
+    "order_date": "2018-12-06",
+    "items": [
+      {
+        "item_number": 1,
+        "title": "Sneakers For Men",
+        "url": "https://assets.adidas.com/images/h_600,f_auto,q_90,fl_lossy/0373d718e0214c509c3ba7fa00ed463f_9366/Superstar_Shoes_White_C77124_05_standard.jpg",
+        "price": 7999,
+        "brand": "Adidas",
+        "color": "Black",
+        "status": "Awaiting item pickup for return",
+        "location": "Delivery Address",
+        "delivered": true,
+        "returned": true,
+        "pickup": false,
+        "cancelled": false,
+        "delivery_date": "2018-12-09",
+        "pickup_date": "2018-12-22",
+        "return_date": "2018-12-21",
+        "cancel_date": ""
       }
     ]
   },
@@ -65,7 +152,12 @@
         "location": "Delhi Airport",
         "delivered": false,
         "returned": false,
-        "delivery_date": ""
+        "pickup": false,
+        "cancelled": false,
+        "delivery_date": "",
+        "pickup_date": "",
+        "return_date": "",
+        "cancel_date": ""
       },
       {
         "item_number": 2,
@@ -78,13 +170,42 @@
         "location": "Arrived at Mumbai Hub",
         "delivered": false,
         "returned": false,
-        "delivery_date": ""
+        "pickup": false,
+        "cancelled": false,
+        "delivery_date": "",
+        "pickup_date": "",
+        "return_date": "",
+        "cancel_date": ""
       }
     ]
   },
   {
     "order_number": "408-5656775-5046745",
-    "order_date": "2018-12-02",
+    "order_date": "2018-11-02",
+    "items": [
+      {
+        "item_number": 1,
+        "title": "Nike Shirt",
+        "url": "https://kickz.akamaized.net/se/media/images/p/600/nike-W_NSW_SIGNAL_T_Shirt_LOGO-White_Black-1.jpg",
+        "price": 999,
+        "brand": "Nike",
+        "color": "White",
+        "status": "Refund Initialized",
+        "location": "Delivery Address",
+        "delivered": true,
+        "returned": true,
+        "pickup": true,
+        "cancelled": false,
+        "delivery_date": "2018-12-05",
+        "pickup_date": "2018-12-10",
+        "return_date": "2018-12-09",
+        "cancel_date": ""
+      }
+    ]
+  },
+  {
+    "order_number": "408-5656775-5046744",
+    "order_date": "2018-11-30",
     "items": [
       {
         "item_number": 1,
@@ -97,7 +218,12 @@
         "location": "Delivery Address",
         "delivered": true,
         "returned": false,
-        "delivery_date": "2018-12-05"
+        "pickup": false,
+        "cancelled": false,
+        "delivery_date": "2018-12-02",
+        "pickup_date": "",
+        "return_date": "",
+        "cancel_date": ""
       },
       {
         "item_number": 2,
@@ -110,26 +236,12 @@
         "location": "Delivery Address",
         "delivered": true,
         "returned": false,
-        "delivery_date": "2018-12-04"
-      }
-    ]
-  },
-  {
-    "order_number": "408-5656775-5046744",
-    "order_date": "2018-11-30",
-    "items": [
-      {
-        "item_number": 1,
-        "title": "Nike Shirt",
-        "url": "https://kickz.akamaized.net/se/media/images/p/600/nike-W_NSW_SIGNAL_T_Shirt_LOGO-White_Black-1.jpg",
-        "price": 999,
-        "brand": "Nike",
-        "color": "White",
-        "status": "Returned - Refund Initialized",
-        "location": "Delivery Address",
-        "delivered": true,
-        "returned": true,
-        "delivery_date": "2018-12-01"
+        "pickup": false,
+        "cancelled": false,
+        "delivery_date": "2018-12-03",
+        "pickup_date": "",
+        "return_date": "",
+        "cancel_date": ""
       }
     ]
   },
@@ -144,11 +256,16 @@
         "price": 1049,
         "brand": "Reebok",
         "color": "Blue",
-        "status": "Returned - Refund Processed",
+        "status": "Refund Processed",
         "location": "Delivery Address",
         "delivered": true,
         "returned": true,
-        "delivery_date": "2018-12-30"
+        "pickup": true,
+        "cancelled": false,
+        "delivery_date": "2018-12-30",
+        "pickup_date": "2018-12-03",
+        "return_date": "2018-12-02",
+        "cancel_date": ""
       }
     ]
   }

@@ -6,7 +6,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.Toast;
 
 
 import com.example.mockapp.network.OrderEntry;
@@ -15,9 +14,6 @@ import com.example.mockapp.slang.ActivityDetector;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import in.slanglabs.platform.session.SlangResolvedIntent;
-import in.slanglabs.platform.ui.SlangScreenContext;
 
 public class OrderListActivity extends AppCompatActivity implements NavigationHost {
 
@@ -47,7 +43,7 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                 Bundle bundle = new Bundle();
                 //orderList = OrderList.initOrderList(getResources());
                 ArrayList<OrderList> orders = intent.getParcelableArrayListExtra(ActivityDetector.ORDER_LIST);
-                Log.d(TAG, "Size of orders is " + orders.size());
+                Log.d(TAG, "Size of orders is up here " + orders.size());
                 List<OrderEntry> list;
                 switch (mode) {
                     case ActivityDetector.MODE_TRACK_ALL:
@@ -62,7 +58,7 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                     case ActivityDetector.MODE_TRACK_DEFAULT:
                     case ActivityDetector.MODE_RETURN_DEFAULT:
                     case ActivityDetector.MODE_REFUND_DEFAULT:
-
+                    case ActivityDetector.MODE_CANCEL_DEFAULT:
                         OrderEntryFragment orderEntryFragment = new OrderEntryFragment();
                         bundle.putString(ActivityDetector.ACTIVITY_MODE, mode);
                         bundle.putString(ActivityDetector.ORDER_NUMBER, "Order#: " + orders.get(0).order_number);
@@ -78,9 +74,11 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                     case ActivityDetector.MODE_TRACK_PRODUCT:
                     case ActivityDetector.MODE_RETURN_PRODUCT:
                     case ActivityDetector.MODE_REFUND_PRODUCT:
-                    case ActivityDetector.MODE_CANCEL:
+                    case ActivityDetector.MODE_CANCEL_PRODUCT:
+                    case ActivityDetector.MODE_TRACK_RETURN:
                         //orders = intent.getParcelableArrayListExtra(ActivityDetector.ORDER_LIST);
-                        Log.d(TAG, "Size of orders is " + orders.size());
+                        Log.d(TAG, "Size of orders is down here " + orders.size());
+                        Log.d(TAG, "Mode is " + mode);
                         bundle.putString(ActivityDetector.ACTIVITY_MODE, mode);
                         if (orders.size() > 1) {
                             orderListFragment = new OrderListFragment();

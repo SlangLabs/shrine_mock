@@ -15,7 +15,12 @@ public class OrderEntry implements Parcelable {
         public String location;
         public boolean delivered;
         public boolean returned;
+        public boolean pickup;
+        public boolean cancelled;
         public String delivery_date;
+        public String pickup_date;
+        public String return_date;
+        public String cancel_date;
         public final static Creator<OrderEntry> CREATOR = new Creator<OrderEntry>() {
 
 
@@ -33,7 +38,7 @@ public class OrderEntry implements Parcelable {
         }
                 ;
 
-protected OrderEntry(Parcel in) {
+    protected OrderEntry(Parcel in) {
         this.item_number = ((int) in.readValue((int.class.getClassLoader())));
         this.title = ((String) in.readValue((String.class.getClassLoader())));
         this.url = ((String) in.readValue((String.class.getClassLoader())));
@@ -44,14 +49,21 @@ protected OrderEntry(Parcel in) {
         this.location = ((String) in.readValue((String.class.getClassLoader())));
         this.delivered = ((boolean) in.readValue((boolean.class.getClassLoader())));
         this.returned = ((boolean) in.readValue((boolean.class.getClassLoader())));
+        this.pickup = ((boolean) in.readValue((boolean.class.getClassLoader())));
+        this.cancelled = ((boolean) in.readValue((boolean.class.getClassLoader())));
         this.delivery_date = ((String) in.readValue((String.class.getClassLoader())));
+        this.pickup_date = ((String) in.readValue((String.class.getClassLoader())));
+        this.return_date = ((String) in.readValue((String.class.getClassLoader())));
+        this.cancel_date = ((String) in.readValue((String.class.getClassLoader())));
     }
 
 public OrderEntry() {
     }
 public OrderEntry(int item_number, String title, String url,
-                      int price, String brand, String color, String status,
-                      String location, boolean delivered, boolean returned, String delivery_date) {
+                  int price, String brand, String color, String status, String location,
+                  boolean delivered, boolean returned, boolean pickup, boolean cancelled,
+                  String delivery_date, String pickup_date, String return_date,
+                  String cancel_date) {
         this.item_number = item_number;
         this.title = title;
         this.url = url;
@@ -62,7 +74,12 @@ public OrderEntry(int item_number, String title, String url,
         this.location = location;
         this.delivered = delivered;
         this.returned = returned;
+        this.pickup = pickup;
+        this.cancelled = cancelled;
         this.delivery_date = delivery_date;
+        this.pickup_date = pickup_date;
+        this.return_date = return_date;
+        this.cancel_date = cancel_date;
     }
 
 
@@ -157,7 +174,12 @@ public OrderEntry(int item_number, String title, String url,
         dest.writeValue(location);
         dest.writeValue(delivered);
         dest.writeValue(returned);
+        dest.writeValue(pickup);
+        dest.writeValue(cancelled);
         dest.writeValue(delivery_date);
+        dest.writeValue(pickup_date);
+        dest.writeValue(return_date);
+        dest.writeValue(cancel_date);
     }
 
         public int describeContents() {

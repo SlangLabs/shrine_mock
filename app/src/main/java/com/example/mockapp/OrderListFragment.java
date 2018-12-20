@@ -17,19 +17,12 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
-import android.widget.Toast;
 
 
-import com.example.mockapp.network.OrderEntry;
 import com.example.mockapp.network.OrderList;
 import com.example.mockapp.slang.ActivityDetector;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import in.slanglabs.platform.application.SlangApplication;
-import in.slanglabs.platform.session.SlangResolvedIntent;
-import in.slanglabs.platform.ui.SlangScreenContext;
 
 public class OrderListFragment extends Fragment {
 
@@ -83,8 +76,9 @@ public class OrderListFragment extends Fragment {
             if (mode.equals(ActivityDetector.MODE_TRACK_PRODUCT)
                     || mode.equals(ActivityDetector.MODE_REFUND_PRODUCT)
                     || mode.equals(ActivityDetector.MODE_RETURN_PRODUCT)
-                    || mode.equals(ActivityDetector.MODE_CANCEL)) {
-                Log.d(TAG, "Mode is ActivityDetector.MODE_TRACK_PRODUCT");
+                    || mode.equals(ActivityDetector.MODE_CANCEL_PRODUCT)
+                    || mode.equals(ActivityDetector.MODE_TRACK_RETURN)) {
+                Log.d(TAG, "Mode is " + mode);
                 orderList = bundle.getParcelableArrayList(ActivityDetector.ORDER_LIST);
             } else {
                 orderList = OrderList.initOrderList(getResources());
