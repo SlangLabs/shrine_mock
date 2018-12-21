@@ -15,6 +15,8 @@ import com.example.mockapp.slang.ActivityDetector;
 import java.util.ArrayList;
 import java.util.List;
 
+import in.slanglabs.platform.ui.SlangUI;
+
 public class OrderListActivity extends AppCompatActivity implements NavigationHost {
 
     private static final String TAG = OrderListActivity.class.getSimpleName();
@@ -25,6 +27,8 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.shr_order_activity);
+
+        SlangUI.showTrigger();
 
         Intent intent = getIntent();
         /*Bundle intentBundle = getIntent().getExtras();

@@ -8,6 +8,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import in.slanglabs.platform.ui.SlangUI;
+
 public class FeedbackActivity extends AppCompatActivity {
 
     Button b;
@@ -36,6 +38,7 @@ public class FeedbackActivity extends AppCompatActivity {
                         Toast.LENGTH_LONG).show();
             }
         });
+        SlangUI.hideTrigger();
 
     }
 

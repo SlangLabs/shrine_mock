@@ -8,20 +8,25 @@ import android.widget.Toast;
 
 
 import com.example.mockapp.OrderListActivity;
+import com.example.mockapp.R;
 import com.example.mockapp.network.OrderEntry;
 import com.example.mockapp.network.OrderList;
+import com.slanglabs.slang.internal.util.SlangUserConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import in.slanglabs.platform.application.ISlangApplicationStateListener;
 import in.slanglabs.platform.application.SlangApplication;
 import in.slanglabs.platform.application.SlangApplicationUninitializedException;
+import in.slanglabs.platform.application.SlangLocaleException;
 import in.slanglabs.platform.application.actions.DefaultResolvedIntentAction;
 import in.slanglabs.platform.session.SlangEntity;
 import in.slanglabs.platform.session.SlangResolvedIntent;
 import in.slanglabs.platform.session.SlangSession;
 import in.slanglabs.platform.ui.SlangScreenContext;
+import in.slanglabs.platform.ui.SlangUI;
 
 public class VoiceInterface {
 
@@ -34,11 +39,12 @@ public class VoiceInterface {
 
     //TODO DO A GIT PUSH FOR NEW BRANCH
 
-    public static void init(final Application appContext, String appId, String authKey) {
+    public static void init(final Application appContext, String appId, String authKey) throws SlangLocaleException {
         VoiceInterface.appContext = appContext;
         orderList = OrderList.initOrderList(appContext.getResources());
         orders = new ArrayList<>();
-        SlangApplication.initialize(appContext, appId, authKey, new ISlangApplicationStateListener() {
+        SlangApplication.initialize(appContext, appId, authKey, SlangApplication.getSupportedLocales(),
+                SlangApplication.LOCALE_ENGLISH_IN, new ISlangApplicationStateListener() {
             @Override
             public void onInitialized() {
                 try {
@@ -61,6 +67,8 @@ public class VoiceInterface {
     }
 
     private static void registerActions() throws SlangApplicationUninitializedException {
+
+        SlangUI.setTriggerImageResource(R.drawable.customer_support2);
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_DEFAULT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
@@ -69,6 +77,7 @@ public class VoiceInterface {
                         return trackDefault(slangSession, ActivityDetector.MODE_TRACK_DEFAULT);
                     }
                 });
+
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_PRODUCT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
@@ -96,14 +105,11 @@ public class VoiceInterface {
                     public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
                         Log.d(TAG, "Slang Triggering Product Track Intent");
                         trackProduct(slangResolvedIntent, false);
-                        if (num > 1) {
+                        if (num > 0) {
                             slangResolvedIntent.getCompletionStatement()
-                                    .overrideAffirmative("Here are the products you asked for.");
-                            return slangSession.success();
-                        }
-                        else if (num == 1) {
-                            slangResolvedIntent.getCompletionStatement()
-                                    .overrideAffirmative("Here is the order you asked for.");
+                                    .overrideAffirmative(getCompletionPrompt(
+                                                    SlangUserConfig.getLocale(),
+                                                    ActivityDetector.MODE_TRACK_PRODUCT));
                             return slangSession.success();
                         }
                         else {
@@ -111,6 +117,7 @@ public class VoiceInterface {
                         }
                     }
                 });
+
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_ALL)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
@@ -128,21 +135,19 @@ public class VoiceInterface {
                         return refundDefault(slangResolvedIntent, slangSession, ActivityDetector.MODE_REFUND_DEFAULT);
                     }
                 });
+
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_REFUND_PRODUCT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
                     public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                        Log.d(TAG, "Slang Triggering Product Refund Intent");
                         refundProduct(slangResolvedIntent, false);
-                        if (num > 1) {
+                        if (num > 0) {
                             slangResolvedIntent.getCompletionStatement()
-                                    .overrideAffirmative("Please choose the product you want to " +
-                                            "check the refund status for.");
-                            return slangSession.success();
-                        }
-                        else if (num == 1){
-                            slangResolvedIntent.getCompletionStatement()
-                                    .overrideAffirmative("The refund status is "
-                                            + orders.get(0).items.get(0).status);
+                                    .overrideAffirmative(getCompletionPrompt(
+                                            SlangUserConfig.getLocale(),
+                                            ActivityDetector.MODE_REFUND_PRODUCT)
+                                    );
                             return slangSession.success();
                         }
                         else {
@@ -172,14 +177,14 @@ public class VoiceInterface {
                         trackReturn(slangResolvedIntent, true);
                         trackReturn(slangResolvedIntent, false);
                         Log.d(TAG, "Slang Triggering Track Return Intent");
-                        if (num > 1) {
+                        if (num > 0) {
                             slangResolvedIntent.getCompletionStatement()
-                                    .overrideAffirmative("Choose among the returns you wish to track.");
-                            return slangSession.success();
-                        }
-                        else if (num == 1) {
-                            slangResolvedIntent.getCompletionStatement()
-                                    .overrideAffirmative("Your order will be pickup up on the specified pick-up date.");
+                                    .overrideAffirmative(
+                                            getCompletionPrompt(
+                                                    SlangUserConfig.getLocale(),
+                                                    ActivityDetector.MODE_TRACK_RETURN
+                                            )
+                                    );
                             return slangSession.success();
                         }
                         else {
@@ -201,6 +206,7 @@ public class VoiceInterface {
                         }
                     }*/
                 });
+
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_RETURN_DEFAULT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
@@ -209,19 +215,20 @@ public class VoiceInterface {
                         return returnDefault(slangSession, ActivityDetector.MODE_RETURN_DEFAULT);
                     }
                 });
+
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_RETURN_PRODUCT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
                     public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
                         returnProduct(slangResolvedIntent, false);
-                        if (num > 1) {
+                        if (num > 0) {
                             slangResolvedIntent.getCompletionStatement()
-                                    .overrideAffirmative("Choose among the products you wish to return.");
-                            return slangSession.success();
-                        }
-                        else if (num == 1) {
-                            slangResolvedIntent.getCompletionStatement()
-                                    .overrideAffirmative("Please confirm if you wish to return this product.");
+                                    .overrideAffirmative(
+                                            getCompletionPrompt(
+                                                    SlangUserConfig.getLocale(),
+                                                    ActivityDetector.MODE_RETURN_PRODUCT
+                                            )
+                                    );
                             return slangSession.success();
                         }
                         else {
@@ -243,6 +250,7 @@ public class VoiceInterface {
                         }
                     }
                 });
+
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_CANCEL_DEFAULT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
@@ -251,19 +259,20 @@ public class VoiceInterface {
                         return cancelDefault(slangSession, ActivityDetector.MODE_RETURN_DEFAULT);
                     }
                 });
+
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_CANCEL_PRODUCT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
                     public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
                         cancelOrder(slangResolvedIntent, false);
-                        if (num > 1) {
+                        if (num > 0) {
                             slangResolvedIntent.getCompletionStatement()
-                                    .overrideAffirmative("Choose among the products you wish to cancel.");
-                            return slangSession.success();
-                        }
-                        else if (num == 1){
-                            slangResolvedIntent.getCompletionStatement()
-                                    .overrideAffirmative("Please confirm if you wish to cancel this product.");
+                                    .overrideAffirmative(
+                                            getCompletionPrompt(
+                                                    SlangUserConfig.getLocale(),
+                                                    ActivityDetector.MODE_CANCEL_PRODUCT
+                                            )
+                                    );
                             return slangSession.success();
                         }
                         else {
@@ -320,9 +329,6 @@ public class VoiceInterface {
                     String color = entry.color;
                     String brand = entry.brand;
                     if (entry.returned && entry.delivered && !entry.pickup) {
-                        /*Log.d(TAG, "For product name " + name);
-                        Log.d(TAG, "Returned is " + String.valueOf(entry.returned) +
-                                " Delivered is " + String.valueOf(entry.delivered) + " Pickup is " + String.valueOf(entry.pickup));*/
                         boolean store = false;
 
                         if (name.toLowerCase().contains(productName.toLowerCase())) {
@@ -370,8 +376,22 @@ public class VoiceInterface {
             }
         } else {
             if (num == 0) {
-                slangResolvedIntent.getCompletionStatement()
-                        .overrideNegative("Sorry, no matching products found. Try cancelling an order instead.");
+                switch (SlangUserConfig.getLocale().getLanguage()) {
+                    case "en":
+                    slangResolvedIntent.getCompletionStatement()
+                            .overrideNegative("Sorry, no matching products found. Try returning " +
+                                    "an order first.");
+                    break;
+                    case "hi":
+                        slangResolvedIntent.getCompletionStatement()
+                                .overrideNegative("क्षमा करें कोई मिलता हुआ आर्डर प्राप्त नहीं हुआ. कृपया " +
+                                        "पहले ऑर्डर लौटने का प्रयास करें");
+                        break;
+                        default:
+                            slangResolvedIntent.getCompletionStatement()
+                                    .overrideNegative("");
+                            break;
+                }
             }
             else {
                 Intent intent = new Intent(activity, OrderListActivity.class);
@@ -489,7 +509,7 @@ public class VoiceInterface {
         } else {
             if (num == 0) {
                 slangResolvedIntent.getCompletionStatement()
-                        .overrideNegative("Sorry, no matching products found");
+                        .overrideNegative(getNegativePrompt(SlangUserConfig.getLocale()));
             }
             else {
                 Intent intent = new Intent(appContext, OrderListActivity.class);
@@ -611,7 +631,7 @@ public class VoiceInterface {
         } else {
             if (num == 0) {
                 slangResolvedIntent.getCompletionStatement()
-                        .overrideNegative("Sorry, no matching products found. Try cancelling an order instead.");
+                        .overrideNegative(getNegativePrompt(SlangUserConfig.getLocale()));
             }
             else {
                 Intent intent = new Intent(activity, OrderListActivity.class);
@@ -650,10 +670,16 @@ public class VoiceInterface {
         i.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         appContext.startActivity(i);
-        slangResolvedIntent.getCompletionStatement()
-                .overrideAffirmative("The refund status is "
-                        + orders.get(0).items.get(0).status);
-        return slangSession.success();
+        if (index > 0) {
+            slangResolvedIntent.getCompletionStatement()
+                    .overrideAffirmative(getCompletionPrompt(SlangUserConfig.getLocale(), mode));
+            return slangSession.success();
+        }
+        else {
+            slangResolvedIntent.getCompletionStatement()
+                    .overrideNegative(getNegativePrompt(SlangUserConfig.getLocale()));
+            return slangSession.failure();
+        }
     }
 
     private static void refundProduct(SlangResolvedIntent slangResolvedIntent, boolean process) {
@@ -735,8 +761,17 @@ public class VoiceInterface {
             }
         } else {
             if (num == 0) {
-                slangResolvedIntent.getCompletionStatement()
-                        .overrideNegative("Sorry, no pending refunds found.");
+                switch (SlangUserConfig.getLocale().getLanguage()) {
+                    case "en":
+                        slangResolvedIntent.getCompletionStatement()
+                                .overrideNegative("Sorry, no pending refunds matching your " +
+                                        "criteria were found.");
+                        break;
+                    case "hi":
+                        slangResolvedIntent.getCompletionStatement()
+                                .overrideNegative("क्षमा करें आपके विनिर्देशों से मेल खाने वाली कोई लंबित " +
+                                        "धनवापसी नहीं मिली");
+                }
             }
             else {
                 Intent intent = new Intent(appContext, OrderListActivity.class);
@@ -858,8 +893,17 @@ public class VoiceInterface {
             }
         } else {
             if (num == 0) {
-                slangResolvedIntent.getCompletionStatement()
-                        .overrideNegative("Sorry, no products eligible for cancellation found");
+                switch (SlangUserConfig.getLocale().getLanguage()) {
+                    case "en":
+                        slangResolvedIntent.getCompletionStatement()
+                                .overrideNegative("Sorry, no products eligible for cancellation" +
+                                        " found");
+                        break;
+                    case "hi":
+                        slangResolvedIntent.getCompletionStatement()
+                                .overrideNegative("क्षमा करें, रद्दीकरण के लिए योग्य कोई आर्डर नहीं मिला");
+
+                }
             }
             else {
                 Intent intent = new Intent(activity, OrderListActivity.class);
@@ -871,4 +915,103 @@ public class VoiceInterface {
         }
     }
 
+    private static String getCompletionPrompt(Locale locale, String mode) {
+        String language = locale.getLanguage();
+        if (mode.equals(ActivityDetector.MODE_TRACK_PRODUCT)) {
+            switch (language) {
+                case "en":
+                    if (num > 1)
+                        return "We could not find the exact order you requested. Please select one from the list of orders below.";
+                    else
+                        return "Here is the order you asked for.";
+                case "hi":
+                    if (num > 1)
+                        return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक का चयन करें.";
+                    else
+                        return "यह रहा आपका आर्डर.";
+            }
+        }
+        else if (mode.equals(ActivityDetector.MODE_REFUND_DEFAULT)) {
+            switch (language) {
+                case "en":
+                    return "The refund status is " + orders.get(0).items.get(0).status + ".";
+                case "hi":
+                    return "आपका रिफंड स्टेटस यह है " + orders.get(0).items.get(0).status + ".";
+            }
+        }
+        else if (mode.equals(ActivityDetector.MODE_REFUND_PRODUCT)) {
+            switch (language) {
+                case "en":
+                    if (num > 1)
+                        return "We could not find the exact order you requested. " +
+                                "Please choose the order you want to check the refund status for.";
+                    else
+                        return "The refund status is " + orders.get(0).items.get(0).status;
+                case "hi":
+                    if (num > 1)
+                        return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक का " +
+                                "चयन करें किसके लिए आप धनवापसी की स्थिति जांचना चाहते हैं.";
+                    else
+                        return "आपका रिफंड स्टेटस यह है " + orders.get(0).items.get(0).status + ".";
+            }
+        }
+        else if (mode.equals(ActivityDetector.MODE_TRACK_RETURN)) {
+            switch (language) {
+                case "en":
+                    if (num > 1)
+                        return "We could not find the exact order you requested. " +
+                                "Choose among the returns you wish to track.";
+                    else
+                        return "Your order will be pickup up on the specified pick-up date.";
+                case "hi":
+                    if (num > 1)
+                        return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक का " +
+                                "चयन करें किस आर्डर वापसी के लिए आप स्थिति जांचना चाहते हैं.";
+                    else
+                        return "आपका ऑर्डर निर्दिष्ट पिक-अप तिथि पर उठाया जाएगा.";
+            }
+        }
+        else if (mode.equals(ActivityDetector.MODE_RETURN_PRODUCT)) {
+            switch (language) {
+                case "en":
+                    if (num > 1)
+                        return "We could not find the exact order you requested. Choose among " +
+                                "the products you wish to return.";
+                    else
+                        return "Please confirm you wish to return this order.";
+                case "hi":
+                    if (num > 1)
+                        return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक का " +
+                                "चयन करें.";
+                    else
+                        return "कृपया पुष्टि करें कि आप इस आर्डर को वापस करना चाहते हैं";
+            }
+        }
+        else if (mode.equals(ActivityDetector.MODE_CANCEL_PRODUCT)) {
+            switch (language) {
+                case "en":
+                    if (num > 1)
+                        return "We could not find the exact order you requested. Choose among" +
+                                " the products you wish to cancel.";
+                    else
+                        return "Please confirm you wish to cancel this order.";
+                case "hi":
+                    if (num > 1)
+                        return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक का " +
+                                "चयन करें.";
+                    else
+                        return "कृपया पुष्टि करें कि आप इस आर्डर को रद्द करना चाहते हैं";
+            }
+        }
+        return "";
+    }
+    private static String getNegativePrompt(Locale locale) {
+        switch (locale.getLanguage()) {
+            case "en":
+                return "You do not have any orders currently matching the criteria.";
+            case "hi":
+                return "क्षमा करें कोई मिलता हुआ आर्डर प्राप्त नहीं हुआ.";
+        }
+        return "";
+    }
 }
