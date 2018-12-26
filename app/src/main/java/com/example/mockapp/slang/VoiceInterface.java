@@ -2,7 +2,9 @@ package com.example.mockapp.slang;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -43,6 +45,12 @@ public class VoiceInterface {
         VoiceInterface.appContext = appContext;
         orderList = OrderList.initOrderList(appContext.getResources());
         orders = new ArrayList<>();
+
+        SharedPreferences sharedPreferences = appContext.getSharedPreferences(ActivityDetector.PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.clear();
+        editor.apply();
+
         SlangApplication.initialize(appContext, appId, authKey, SlangApplication.getSupportedLocales(),
                 SlangApplication.LOCALE_ENGLISH_IN, new ISlangApplicationStateListener() {
             @Override
@@ -1005,6 +1013,7 @@ public class VoiceInterface {
         }
         return "";
     }
+
     private static String getNegativePrompt(Locale locale) {
         switch (locale.getLanguage()) {
             case "en":

@@ -2,6 +2,7 @@ package com.example.mockapp;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.design.button.MaterialButton;
@@ -49,6 +50,11 @@ public class OrderEntryRecyclerViewAdapter extends RecyclerView.Adapter<OrderEnt
     public void onBindViewHolder(@NonNull final OrderEntryViewHolder orderEntryViewHolder, int i) {
         if (orderEntries != null && i < orderEntries.size()) {
 
+            SharedPreferences sharedPreferences = context.getSharedPreferences(
+                    ActivityDetector.PREFERENCES, Context.MODE_PRIVATE
+            );
+            final SharedPreferences.Editor editor = sharedPreferences.edit();
+
             orderEntryViewHolder.returnDate.setVisibility(GONE);
             orderEntryViewHolder.pickUpDate.setVisibility(GONE);
             final String date = String.valueOf(new java.sql.Date(System.currentTimeMillis()));
@@ -58,15 +64,25 @@ public class OrderEntryRecyclerViewAdapter extends RecyclerView.Adapter<OrderEnt
             imageRequester.setImageFromUrl(orderEntryViewHolder.orderImage, entry.url);
             orderEntryViewHolder.title.setText(entry.title);
             orderEntryViewHolder.brand.setText(entry.brand);
+
+            boolean present = sharedPreferences.getBoolean(entry.title + ActivityDetector.PREF_KEY_BOOL, false);
+            String pref_mode = sharedPreferences.getString(entry.title, "");
+            String pref_date = sharedPreferences.getString(entry.title + ActivityDetector.PREF_KEY_DATE, "");
+
             if (entry.delivered)
                 orderEntryViewHolder.cancelButton.setText("Return");
             else
                 orderEntryViewHolder.cancelButton.setText("Cancel");
-            if (entry.returned) {
+            //TODO Use the present variable here
+            if (entry.returned || (pref_mode.equals(ActivityDetector.RETURN_PREF))) {
                 orderEntryViewHolder.cancelButton.setVisibility(GONE);
                 orderEntryViewHolder.status.setTextColor(Color.rgb(255, 102, 0));
                 orderEntryViewHolder.location.setVisibility(GONE);
-                String return_date = "Return Date: " + entry.return_date;
+                String return_date;
+                if(present)
+                    return_date = "Return Date: " + pref_date;
+                else
+                    return_date = "Return Date: " + entry.return_date;
                 orderEntryViewHolder.returnDate.setText(return_date);
                 orderEntryViewHolder.returnDate.setVisibility(View.VISIBLE);
                 String pickup;
@@ -78,15 +94,21 @@ public class OrderEntryRecyclerViewAdapter extends RecyclerView.Adapter<OrderEnt
                 }
                 orderEntryViewHolder.pickUpDate.setText(pickup);
                 orderEntryViewHolder.pickUpDate.setVisibility(View.VISIBLE);
-            } else if (entry.cancelled) {
+            } else if (entry.cancelled || (pref_mode.equals(ActivityDetector.CANCEL_PREF))) {
                 orderEntryViewHolder.cancelButton.setVisibility(GONE);
                 orderEntryViewHolder.status.setTextColor(Color.RED);
                 orderEntryViewHolder.cancelledOverlay.setVisibility(View.VISIBLE);
                 orderEntryViewHolder.location.setVisibility(GONE);
-                String cancellation_date = "Cancellation Date: " + entry.cancel_date;
+                String cancellation_date;
+                if(present)
+                    cancellation_date = "Cancellation Date: " + pref_date;
+                else
+                    cancellation_date = "Cancellation Date: " + entry.cancel_date;
                 orderEntryViewHolder.returnDate.setText(cancellation_date);
                 orderEntryViewHolder.returnDate.setVisibility(View.VISIBLE);
             }
+
+            //TODO set preference here
             orderEntryViewHolder.cancelButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -99,20 +121,31 @@ public class OrderEntryRecyclerViewAdapter extends RecyclerView.Adapter<OrderEnt
                             if (entry.delivered) {
                                 orderEntryViewHolder.status.setText(R.string.returned);
                                 orderEntryViewHolder.status.setTextColor(Color.rgb(255, 102, 0));
-                                orderEntryViewHolder.cancelButton.setEnabled(false);
+                                //orderEntryViewHolder.cancelButton.setEnabled(false);
+                                orderEntryViewHolder.cancelButton.setVisibility(GONE);
                                 String return_date = "Return Date: " + date;
                                 orderEntryViewHolder.returnDate.setText(return_date);
                                 orderEntryViewHolder.returnDate.setVisibility(View.VISIBLE);
+                                orderEntryViewHolder.location.setVisibility(View.GONE);
+                                editor.putBoolean(entry.title + ActivityDetector.PREF_KEY_BOOL, true);
+                                editor.putString(entry.title, ActivityDetector.RETURN_PREF);
+                                editor.putString(entry.title + ActivityDetector.PREF_KEY_DATE, date);
+                                editor.apply();
                             } else {
                                 orderEntryViewHolder.cancelledOverlay.setVisibility(View.VISIBLE);
                                 orderEntryViewHolder.status.setText(R.string.cancelled);
                                 orderEntryViewHolder.status.setTextColor(Color.RED);
-                                orderEntryViewHolder.cancelButton.setEnabled(false);
+                                //orderEntryViewHolder.cancelButton.setEnabled(false);
+                                orderEntryViewHolder.cancelButton.setVisibility(GONE);
                                 String cancellation_date = "Cancellation Date: " + date;
                                 orderEntryViewHolder.returnDate.setText(cancellation_date);
                                 orderEntryViewHolder.returnDate.setVisibility(View.VISIBLE);
                                 orderEntryViewHolder.location.setVisibility(View.GONE);
                                 entry.cancelled = true;
+                                editor.putBoolean(entry.title + ActivityDetector.PREF_KEY_BOOL, true);
+                                editor.putString(entry.title, ActivityDetector.CANCEL_PREF);
+                                editor.putString(entry.title + ActivityDetector.PREF_KEY_DATE, date);
+                                editor.apply();
                             }
                             dialog.dismiss();
                         }
@@ -143,10 +176,15 @@ public class OrderEntryRecyclerViewAdapter extends RecyclerView.Adapter<OrderEnt
                         orderEntryViewHolder.cancelledOverlay.setVisibility(View.VISIBLE);
                         orderEntryViewHolder.status.setText(R.string.cancelled);
                         orderEntryViewHolder.status.setTextColor(Color.RED);
-                        orderEntryViewHolder.cancelButton.setEnabled(false);
+                        //orderEntryViewHolder.cancelButton.setEnabled(false);
+                        orderEntryViewHolder.cancelButton.setVisibility(GONE);
                         String cancellation_date = "Cancellation Date: " + date;
                         orderEntryViewHolder.returnDate.setText(cancellation_date);
                         orderEntryViewHolder.returnDate.setVisibility(View.VISIBLE);
+                        editor.putBoolean(entry.title + ActivityDetector.PREF_KEY_BOOL, true);
+                        editor.putString(entry.title, ActivityDetector.CANCEL_PREF);
+                        editor.putString(entry.title + ActivityDetector.PREF_KEY_DATE, date);
+                        editor.apply();
                         entry.cancelled = true;
                         dialog.dismiss();
                     }
@@ -171,9 +209,15 @@ public class OrderEntryRecyclerViewAdapter extends RecyclerView.Adapter<OrderEnt
                     public void onClick(DialogInterface dialog, int which) {
                         orderEntryViewHolder.status.setText(R.string.returned);
                         orderEntryViewHolder.status.setTextColor(Color.rgb(255, 102, 0));
+                        //orderEntryViewHolder.cancelButton.setEnabled(false);
+                        orderEntryViewHolder.cancelButton.setVisibility(GONE);
                         String return_date = "Return Date: " + date;
                         orderEntryViewHolder.returnDate.setText(return_date);
-                        orderEntryViewHolder.cancelButton.setEnabled(false);
+                        orderEntryViewHolder.location.setVisibility(View.GONE);
+                        editor.putBoolean(entry.title + ActivityDetector.PREF_KEY_BOOL, true);
+                        editor.putString(entry.title, ActivityDetector.RETURN_PREF);
+                        editor.putString(entry.title + ActivityDetector.PREF_KEY_DATE, date);
+                        editor.apply();
                         entry.returned = true;
                         dialog.dismiss();
                     }
@@ -189,7 +233,10 @@ public class OrderEntryRecyclerViewAdapter extends RecyclerView.Adapter<OrderEnt
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(context.getResources().getColor(R.color.darkRed));
                 dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(context.getResources().getColor(R.color.darkGreen));
             } else {
-                orderEntryViewHolder.status.setText(entry.status);
+                if(!pref_mode.equals(""))
+                    orderEntryViewHolder.status.setText(pref_mode);
+                else
+                    orderEntryViewHolder.status.setText(entry.status);
             }
             String location = "Currently at: " + entry.location;
             orderEntryViewHolder.location.setText(location);

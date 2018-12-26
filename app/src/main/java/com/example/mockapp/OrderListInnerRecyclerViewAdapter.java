@@ -1,6 +1,7 @@
 package com.example.mockapp;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 import com.android.volley.toolbox.NetworkImageView;
 import com.example.mockapp.network.ImageRequester;
 import com.example.mockapp.network.OrderEntry;
+import com.example.mockapp.slang.ActivityDetector;
 
 import java.util.List;
 
@@ -41,12 +43,22 @@ public class OrderListInnerRecyclerViewAdapter extends RecyclerView.Adapter<Orde
     @Override
     public void onBindViewHolder(@NonNull OrderListInnerViewHolder holder, int i) {
         if (orderEntries != null && i < orderEntries.size()) {
+            SharedPreferences sharedPreferences = context.getSharedPreferences(
+                    ActivityDetector.PREFERENCES, Context.MODE_PRIVATE
+            );
             OrderEntry orderEntry = orderEntries.get(i);
+
+            boolean present = sharedPreferences.getBoolean(orderEntry.title + ActivityDetector.PREF_KEY_BOOL, false);
+            String pref_mode = sharedPreferences.getString(orderEntry.title, "");
+
             holder.orderTitle.setText(orderEntry.title);
             holder.orderBrand.setText(orderEntry.brand);
             String price = "INR " + orderEntry.price;
             holder.orderPrice.setText(price);
-            holder.orderStatus.setText(orderEntry.status);
+            if(present)
+                holder.orderStatus.setText(pref_mode);
+            else
+                holder.orderStatus.setText(orderEntry.status);
             /*holder.orderLocation.setText(orderEntry.location);
             holder.orderDelivery.setText(orderEntry.delivery_date);*/
             imageRequester.setImageFromUrl(holder.orderImage, orderEntry.url);

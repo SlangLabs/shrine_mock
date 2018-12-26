@@ -21,8 +21,6 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
 
     private static final String TAG = OrderListActivity.class.getSimpleName();
 
-    //private List<OrderList> orderList;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,11 +29,7 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
         SlangUI.showTrigger();
 
         Intent intent = getIntent();
-        /*Bundle intentBundle = getIntent().getExtras();
-        if (intentBundle == null)
-            Log.d(TAG, "Bundle null");*/
         String mode = intent.getStringExtra(ActivityDetector.ACTIVITY_MODE);
-        //Log.d(TAG, "Size of orders is " + orders.size());
 
         if (savedInstanceState == null) {
             if (mode == null) {
@@ -45,7 +39,6 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                         .commit();
             } else {
                 Bundle bundle = new Bundle();
-                //orderList = OrderList.initOrderList(getResources());
                 ArrayList<OrderList> orders = intent.getParcelableArrayListExtra(ActivityDetector.ORDER_LIST);
                 Log.d(TAG, "Size of orders is up here " + orders.size());
                 List<OrderEntry> list;
@@ -80,7 +73,6 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                     case ActivityDetector.MODE_REFUND_PRODUCT:
                     case ActivityDetector.MODE_CANCEL_PRODUCT:
                     case ActivityDetector.MODE_TRACK_RETURN:
-                        //orders = intent.getParcelableArrayListExtra(ActivityDetector.ORDER_LIST);
                         Log.d(TAG, "Size of orders is down here " + orders.size());
                         Log.d(TAG, "Mode is " + mode);
                         bundle.putString(ActivityDetector.ACTIVITY_MODE, mode);

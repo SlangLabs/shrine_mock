@@ -1,9 +1,13 @@
 package com.example.mockapp.slang;
 
-import javax.sql.StatementEvent;
-
 public class ActivityDetector {
     public static final String ACTIVITY_MODE = "activity_mode";
+
+    public static final String PREFERENCES = "preferences";
+    public static final String RETURN_PREF = "Awaiting item pickup for return";
+    public static final String CANCEL_PREF = "Order cancelled";
+    public static final String PREF_KEY_DATE = "key_date";
+    public static final String PREF_KEY_BOOL = "key_bool";
 
     public static final String MODE_NONE = "none";
     public static final String MODE_TRACK_DEFAULT = "track_default";
