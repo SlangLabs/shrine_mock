@@ -94,8 +94,8 @@ public class OrderListFragment extends Fragment {
         recyclerViewOrder.setLayoutManager(linearLayoutManager);
         mAdapter = new OrderListRecyclerViewAdapter(getContext(), orderList, mode);
         recyclerViewOrder.setAdapter(mAdapter);
-        final Bundle bundleSend = new Bundle();
-        bundleSend.putString(ActivityDetector.ACTIVITY_MODE, mode);
+        //final Bundle bundleSend = new Bundle();
+        //bundleSend.putString(ActivityDetector.ACTIVITY_MODE, mode);
         //final String modeContext = mode;
         /*mAdapter.setOrderClickListener(new OrderListRecyclerViewAdapter.OrderClickListener() {
             @Override

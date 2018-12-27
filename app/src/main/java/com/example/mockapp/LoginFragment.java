@@ -40,7 +40,7 @@ public class LoginFragment extends Fragment {
                     passwordTextInput.setError(getString(R.string.shr_error_password));
                 } else {
                     passwordTextInput.setError(null); // Clear the error
-                    ((NavigationHost) getActivity()).navigateTo(new ProductGridFragment(), false); // Navigate to the next Fragment
+                    ((NavigationHost) getActivity()).navigateTo(new ProductGridFragment(), false, null); // Navigate to the next Fragment
                 }
             }
         });
@@ -67,6 +67,7 @@ public class LoginFragment extends Fragment {
         authentication of the username and password.
      */
     private boolean isPasswordValid(@Nullable Editable text) {
-        return text != null && text.length() >= 8;
+        //return text != null && text.length() >= 8;
+        return true;
     }
 }

@@ -72,13 +72,120 @@
                 android:text="@string/shr_order_date"
                 android:textAppearance="?attr/textAppearanceBody1" />
 
-        <!--TODO remove Recyclerview and include the item layout here-->
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/recycler_view_order_entry"
+        <android.support.design.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="@android:color/transparent"
+            android:layout_marginTop="16dp"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="4dp"
+            android:elevation="0dp"
+            android:orientation="vertical">
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
+                android:background="@drawable/shr_drawable_selector"
+                android:padding="8dp"
+                android:orientation="vertical">
+
+                <RelativeLayout
+                    android:layout_width="180dp"
+                    android:layout_height="180dp"
+                    android:layout_gravity="center">
+                    <com.android.volley.toolbox.NetworkImageView
+                        android:layout_width="180dp"
+                        android:layout_height="180dp"
+                        android:layout_marginTop="24dp"
+                        android:id="@+id/order_entry_image"
+                        android:layout_gravity="center"/>
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/cancelled"
+                        android:visibility="invisible"
+                        android:src="@drawable/cancelled"/>
+
+                </RelativeLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/shr_product_title"
+                    android:layout_marginTop="16dp"
+                    android:id="@+id/order_entry_title"
+                    android:layout_marginLeft="16dp"
+                    android:textAppearance="?attr/textAppearanceHeadline5"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/shr_order_brand"
+                    android:id="@+id/order_entry_brand"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginLeft="16dp"
+                    android:textAppearance="?attr/textAppearanceHeadline5"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/shr_order_price"
+                    android:id="@+id/order_entry_price"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginLeft="16dp"
+                    android:textAppearance="?attr/textAppearanceHeadline6"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/shr_order_status"
+                    android:id="@+id/order_entry_status"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginLeft="16dp"
+                    android:textAppearance="?attr/textAppearanceBody1"/>
+
+                <TextView
+                    android:id="@+id/order_entry_location"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/shr_order_location"
+                    android:textAppearance="?attr/textAppearanceBody2" />
+
+                <TextView
+                    android:id="@+id/order_entry_delivery"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/shr_order_delivery"
+                    android:textAppearance="?attr/textAppearanceBody2" />
+
+                <TextView
+                    android:id="@+id/order_entry_return"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/shr_order_return"
+                    android:textAppearance="?attr/textAppearanceBody2" />
+
+                <TextView
+                    android:id="@+id/order_entry_pickup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/shr_order_pickup"
+                    android:textAppearance="?attr/textAppearanceBody2" />
+
+                <android.support.design.button.MaterialButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/cancel_button"
+                    style="@style/Widget.Shrine.Button"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/cancel"/>
+            </LinearLayout>
+        </android.support.design.card.MaterialCardView>
         </LinearLayout>
 
         </android.support.v4.widget.NestedScrollView>

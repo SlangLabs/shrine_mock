@@ -36,8 +36,13 @@ public class ActivityDetector {
     public static final String INTENT_CANCEL_PRODUCT = "cancel_order_product";
     public static final String INTENT_RETURN_PRODUCT = "return_order_product";
     public static final String INTENT_RETURN_DEFAULT = "return_order_default";
+    public static final String INTENT_CONTACT_SUPPORT = "contact_us";
+    public static final String INTENT_NO_VOICE = "no_voice";
 
     public static final String ENTITY_PRODUCT = "product";
     public static final String ENTITY_BRAND = "brand";
     public static final String ENTITY_COLOR = "color";
+
+    public static final String TAG_ORDER_LIST = "order_list";
+    public static final String TAG_ORDER_ENTRY = "order_entry";
 }

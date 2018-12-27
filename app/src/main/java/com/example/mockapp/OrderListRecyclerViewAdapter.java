@@ -87,7 +87,7 @@ public class OrderListRecyclerViewAdapter extends RecyclerView.Adapter<OrderList
                     bundle.putString(ActivityDetector.ACTIVITY_MODE, mode);
                     OrderEntryFragment orderEntryFragment = new OrderEntryFragment();
                     orderEntryFragment.setArguments(bundle);
-                    ((NavigationHost) context).navigateTo(orderEntryFragment, true);
+                    ((NavigationHost) context).navigateTo(orderEntryFragment, true, ActivityDetector.TAG_ORDER_ENTRY);
                 }
             });
         }

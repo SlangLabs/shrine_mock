@@ -5,10 +5,13 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.widget.Toast;
 
 
+import com.example.mockapp.FeedbackActivity;
+import com.example.mockapp.OrderEntryFragment;
 import com.example.mockapp.OrderListActivity;
 import com.example.mockapp.R;
 import com.example.mockapp.network.OrderEntry;
@@ -38,8 +41,8 @@ public class VoiceInterface {
     private static List<OrderList> orders;
     private static List<String> colorList, brandList;
     private static int num, brandNum, colorNum;
-
-    //TODO DO A GIT PUSH FOR NEW BRANCH
+    private static boolean flag = true;
+    private static boolean current = false;
 
     public static void init(final Application appContext, String appId, String authKey) throws SlangLocaleException {
         VoiceInterface.appContext = appContext;
@@ -76,6 +79,8 @@ public class VoiceInterface {
 
     private static void registerActions() throws SlangApplicationUninitializedException {
 
+        //TODO figure out not starting new activities, just keep replacing fragments
+
         SlangUI.setTriggerImageResource(R.drawable.customer_support2);
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_DEFAULT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
@@ -91,6 +96,7 @@ public class VoiceInterface {
                     @Override
                     public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent, SlangSession session) {
                         orders.clear();
+                        flag = true;
                         return super.onIntentResolutionBegin(intent, session);
                     }
 
@@ -112,6 +118,7 @@ public class VoiceInterface {
                     @Override
                     public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
                         Log.d(TAG, "Slang Triggering Product Track Intent");
+                        flag = true;
                         trackProduct(slangResolvedIntent, false);
                         if (num > 0) {
                             slangResolvedIntent.getCompletionStatement()
@@ -147,8 +154,15 @@ public class VoiceInterface {
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_REFUND_PRODUCT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
+                    public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent, SlangSession session) {
+                        flag = true;
+                        return super.onIntentResolutionBegin(intent, session);
+                    }
+
+                    @Override
                     public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
                         Log.d(TAG, "Slang Triggering Product Refund Intent");
+                        flag = true;
                         refundProduct(slangResolvedIntent, false);
                         if (num > 0) {
                             slangResolvedIntent.getCompletionStatement()
@@ -169,7 +183,7 @@ public class VoiceInterface {
                             case ActivityDetector.ENTITY_PRODUCT:
                             case ActivityDetector.ENTITY_COLOR:
                             case ActivityDetector.ENTITY_BRAND:
-                                Log.d(TAG, "Entity Product for Refund Intent");
+                                Log.d(TAG, "Entity Resolve for Refund Intent");
                                 refundProduct(entity.getParent(), true);
                                 return session.success();
                             default:
@@ -199,20 +213,6 @@ public class VoiceInterface {
                             return slangSession.failure();
                         }
                     }
-
-                    /*@Override
-                    public SlangSession.Status onEntityResolved(SlangEntity entity, SlangSession session) {
-                        switch (entity.getName()) {
-                            case ActivityDetector.ENTITY_PRODUCT:
-                            case ActivityDetector.ENTITY_COLOR:
-                            case ActivityDetector.ENTITY_BRAND:
-                                Log.d(TAG, "Entity Product for Refund Intent");
-                                refundProduct(entity.getParent(), true);
-                                return session.success();
-                            default:
-                                return super.onEntityResolved(entity, session);
-                        }
-                    }*/
                 });
 
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_RETURN_DEFAULT)
@@ -228,6 +228,7 @@ public class VoiceInterface {
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
                     public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                        flag = true;
                         returnProduct(slangResolvedIntent, false);
                         if (num > 0) {
                             slangResolvedIntent.getCompletionStatement()
@@ -270,8 +271,23 @@ public class VoiceInterface {
 
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_CANCEL_PRODUCT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
+
+                    @Override
+                    public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent, SlangSession session) {
+                        orders.clear();
+                        flag = true;
+                        current = false;
+                        return super.onIntentResolutionBegin(intent, session);
+                    }
+
                     @Override
                     public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                        if(flag) {
+                            cancelCurrent(slangResolvedIntent);
+                            if (!current)
+                                cancelOrder(slangResolvedIntent, true);
+                        }
+                        flag = true;
                         cancelOrder(slangResolvedIntent, false);
                         if (num > 0) {
                             slangResolvedIntent.getCompletionStatement()
@@ -287,18 +303,51 @@ public class VoiceInterface {
                             return slangSession.failure();
                         }
                     }
+
                     @Override
-                    public SlangSession.Status onEntityResolved(SlangEntity entity, SlangSession session) {
+                    public SlangSession.Status onEntityUnresolved(SlangEntity entity, SlangSession session) {
+                        Log.d(TAG, "Entity Unresolved for Cancel Intent");
                         switch (entity.getName()) {
                             case ActivityDetector.ENTITY_PRODUCT:
                             case ActivityDetector.ENTITY_COLOR:
                             case ActivityDetector.ENTITY_BRAND:
-                                Log.d(TAG, "Entity Product for Cancel Intent");
+                                Log.d(TAG, "Entity Unresolved for Cancel Intent");
+                                cancelCurrent(entity.getParent());
+                                return session.success();
+                            default:
+                                return super.onEntityUnresolved(entity, session);
+                        }
+                    }
+
+                    @Override
+                    public SlangSession.Status onEntityResolved(SlangEntity entity, SlangSession session) {
+                        Log.d(TAG, "Entity Resolved for Cancel Intent");
+                        switch (entity.getName()) {
+                            case ActivityDetector.ENTITY_PRODUCT:
+                            case ActivityDetector.ENTITY_COLOR:
+                            case ActivityDetector.ENTITY_BRAND:
                                 cancelOrder(entity.getParent(), true);
                                 return session.success();
                             default:
                                 return super.onEntityResolved(entity, session);
                         }
+                    }
+                });
+
+        SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_CONTACT_SUPPORT)
+                .setResolutionAction(new DefaultResolvedIntentAction() {
+                    @Override
+                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                        appContext.startActivity(new Intent(appContext, FeedbackActivity.class));
+                        return slangSession.success();
+                    }
+                });
+
+        SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_NO_VOICE)
+                .setResolutionAction(new DefaultResolvedIntentAction() {
+                    @Override
+                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                        return slangSession.success();
                     }
                 });
     }
@@ -310,7 +359,7 @@ public class VoiceInterface {
             num = 0;
             String productName = String.valueOf(slangResolvedIntent
                     .getEntity(ActivityDetector.ENTITY_PRODUCT).getValue());
-            Log.d(TAG, "Name is " + productName);
+            //Log.d(TAG, "Name is " + productName);
             String productColor = String.valueOf(slangResolvedIntent
                     .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
             String productBrand = String.valueOf(slangResolvedIntent
@@ -423,108 +472,109 @@ public class VoiceInterface {
     }
 
     private static void trackProduct(final SlangResolvedIntent slangResolvedIntent, boolean process) {
+        if (flag) {
+            if (process) {
+                flag = false;
+                num = 0;
+                String productName = String.valueOf(slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_PRODUCT).getValue());
+                Log.d(TAG, "Name is " + productName);
+                String productColor = String.valueOf(slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
+                String productBrand = String.valueOf(slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
+                boolean colorBool = false;
+                boolean brandBool = false;
+                colorList = new ArrayList<>();
+                colorNum = 0;
+                brandList = new ArrayList<>();
+                brandNum = 0;
+                List<OrderEntry> list;
 
-        if (process) {
-            num = 0;
-            String productName = String.valueOf(slangResolvedIntent
-                    .getEntity(ActivityDetector.ENTITY_PRODUCT).getValue());
-            Log.d(TAG, "Name is " + productName);
-            String productColor = String.valueOf(slangResolvedIntent
-                    .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
-            String productBrand = String.valueOf(slangResolvedIntent
-                    .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
-            boolean colorBool = false;
-            boolean brandBool = false;
-            colorList = new ArrayList<>();
-            colorNum = 0;
-            brandList = new ArrayList<>();
-            brandNum = 0;
-            List<OrderEntry> list;
+                if (!productColor.isEmpty())
+                    colorBool = true;
+                if (!productBrand.isEmpty())
+                    brandBool = true;
+                for (int i = 0; i < orderList.size(); i++) {
+                    list = orderList.get(i).items;
+                    List<OrderEntry> orderEntries = new ArrayList<>();
+                    boolean storeOut = false;
+                    for (int j = 0; j < list.size(); j++) {
+                        OrderEntry entry = list.get(j);
+                        String name = entry.title;
+                        String color = entry.color;
+                        String brand = entry.brand;
+                        boolean store = false;
 
-            if (!productColor.isEmpty())
-                colorBool = true;
-            if (!productBrand.isEmpty())
-                brandBool = true;
-            for (int i = 0; i < orderList.size(); i++) {
-                list = orderList.get(i).items;
-                List<OrderEntry> orderEntries = new ArrayList<>();
-                boolean storeOut = false;
-                for (int j = 0; j < list.size(); j++) {
-                    OrderEntry entry = list.get(j);
-                    String name = entry.title;
-                    String color = entry.color;
-                    String brand = entry.brand;
-                    boolean store = false;
-
-                    if (name.toLowerCase().contains(productName.toLowerCase())) {
-                        if (colorBool) {
-                            if (productColor.equalsIgnoreCase(color)) {
-                                if (brandBool) {
-                                    if (productColor.equalsIgnoreCase(brand)) {
+                        if (name.toLowerCase().contains(productName.toLowerCase())) {
+                            if (colorBool) {
+                                if (productColor.equalsIgnoreCase(color)) {
+                                    if (brandBool) {
+                                        if (productColor.equalsIgnoreCase(brand)) {
+                                            num++;
+                                            store = true;
+                                            storeOut = true;
+                                        }
+                                    } else {
+                                        // brand  not given by user
+                                        if (brandList.size() > 0 && brandList.contains(brand))
+                                            brandNum++;
                                         num++;
                                         store = true;
                                         storeOut = true;
+                                        brandList.add(brand);
+                                    }
+                                }
+                            } else {
+                                if (brandBool) {
+                                    if (productColor.equalsIgnoreCase(brand)) {
+                                        //color not given by user
+                                        if (colorList.size() > 0 && colorList.contains(color))
+                                            colorNum++;
+                                        num++;
+                                        store = true;
+                                        storeOut = true;
+                                        colorList.add(color);
                                     }
                                 } else {
-                                    // brand  not given by user
-                                    if (brandList.size() > 0 && brandList.contains(brand))
-                                        brandNum++;
-                                    num++;
-                                    store = true;
-                                    storeOut = true;
-                                    brandList.add(brand);
-                                }
-                            }
-                        } else {
-                            if (brandBool) {
-                                if (productColor.equalsIgnoreCase(brand)) {
-                                    //color not given by user
-                                    if (colorList.size() > 0 && colorList.contains(color))
-                                        colorNum++;
+                                    //only name given by user
+                                    if (colorList.size() > 0) {
+                                        if (colorList.contains(color))
+                                            colorNum++;
+                                        if (brandList.contains(brand))
+                                            brandNum++;
+                                    }
                                     num++;
                                     store = true;
                                     storeOut = true;
                                     colorList.add(color);
+                                    brandList.add(brand);
                                 }
-                            } else {
-                                //only name given by user
-                                if (colorList.size() > 0) {
-                                    if (colorList.contains(color))
-                                        colorNum++;
-                                    if (brandList.contains(brand))
-                                        brandNum++;
-                                }
-                                num++;
-                                store = true;
-                                storeOut = true;
-                                colorList.add(color);
-                                brandList.add(brand);
                             }
                         }
+                        if (store) {
+                            orderEntries.add(entry);
+                            Log.d(TAG, "Adding orderEntry to list of OrderEntries");
+                        }
                     }
-                    if (store) {
-                        orderEntries.add(entry);
-                        Log.d(TAG, "Adding orderEntry to list of OrderEntries");
+                    if (storeOut) {
+                        orders.add(new OrderList(orderList.get(i).order_number,
+                                orderList.get(i).order_date, orderEntries));
+                        Log.d(TAG, "Adding list of OrderEntries to list of orderList");
                     }
                 }
-                if (storeOut) {
-                    orders.add(new OrderList(orderList.get(i).order_number,
-                            orderList.get(i).order_date, orderEntries));
-                    Log.d(TAG, "Adding list of OrderEntries to list of orderList");
+                Log.d(TAG, "value of num is " + num);
+            } else {
+                if (num == 0) {
+                    slangResolvedIntent.getCompletionStatement()
+                            .overrideNegative(getNegativePrompt(SlangUserConfig.getLocale()));
+                } else {
+                    Intent intent = new Intent(appContext, OrderListActivity.class);
+                    intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_PRODUCT);
+                    intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    appContext.startActivity(intent);
                 }
-            }
-            Log.d(TAG, "value of num is " + num);
-        } else {
-            if (num == 0) {
-                slangResolvedIntent.getCompletionStatement()
-                        .overrideNegative(getNegativePrompt(SlangUserConfig.getLocale()));
-            }
-            else {
-                Intent intent = new Intent(appContext, OrderListActivity.class);
-                intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_PRODUCT);
-                intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                appContext.startActivity(intent);
             }
         }
     }
@@ -558,46 +608,61 @@ public class VoiceInterface {
     }
 
     private static void returnProduct(SlangResolvedIntent slangResolvedIntent, boolean process) {
-        Activity activity = SlangScreenContext.getInstance().getCurrentActivity();
-        if(process) {
-            orders.clear();
-            num = 0;
-            String productName = String.valueOf(slangResolvedIntent
-                    .getEntity(ActivityDetector.ENTITY_PRODUCT).getValue());
-            Log.d(TAG, "Name is " + productName);
-            String productColor = String.valueOf(slangResolvedIntent
-                    .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
-            String productBrand = String.valueOf(slangResolvedIntent
-                    .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
-            boolean colorBool = false;
-            boolean brandBool = false;
-            colorList = new ArrayList<>();
-            colorNum = 0;
-            brandList = new ArrayList<>();
-            brandNum = 0;
-            List<OrderEntry> list;
-            if (!productColor.isEmpty())
-                colorBool = true;
-            if (!productBrand.isEmpty())
-                brandBool = true;
-            for (int i = 0; i < orderList.size(); i++) {
-                list = orderList.get(i).items;
-                List<OrderEntry> orderEntries = new ArrayList<>();
-                boolean storeOut = false;
-                for (int j = 0; j < list.size(); j++) {
-                    OrderEntry entry = list.get(j);
-                    String name = entry.title;
-                    Log.d(TAG, "Title is " + name);
-                    String color = entry.color;
-                    String brand = entry.brand;
-                    if (!entry.returned && entry.delivered && !entry.cancelled) {
-                        boolean store = false;
+        if (flag) {
+            Activity activity = SlangScreenContext.getInstance().getCurrentActivity();
+            if (process) {
+                flag = false;
+                orders.clear();
+                num = 0;
+                String productName = String.valueOf(slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_PRODUCT).getValue());
+                Log.d(TAG, "Name is " + productName);
+                String productColor = String.valueOf(slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
+                String productBrand = String.valueOf(slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
+                boolean colorBool = false;
+                boolean brandBool = false;
+                colorList = new ArrayList<>();
+                colorNum = 0;
+                brandList = new ArrayList<>();
+                brandNum = 0;
+                List<OrderEntry> list;
+                if (!productColor.isEmpty())
+                    colorBool = true;
+                if (!productBrand.isEmpty())
+                    brandBool = true;
+                for (int i = 0; i < orderList.size(); i++) {
+                    list = orderList.get(i).items;
+                    List<OrderEntry> orderEntries = new ArrayList<>();
+                    boolean storeOut = false;
+                    for (int j = 0; j < list.size(); j++) {
+                        OrderEntry entry = list.get(j);
+                        String name = entry.title;
+                        Log.d(TAG, "Title is " + name);
+                        String color = entry.color;
+                        String brand = entry.brand;
+                        if (!entry.returned && entry.delivered && !entry.cancelled) {
+                            boolean store = false;
 
-                        if (name.toLowerCase().contains(productName.toLowerCase())) {
-                            if (colorBool) {
-                                if (productColor.equalsIgnoreCase(color)) {
-                                    //If color is present from user input we compare and
-                                    // only validate if color and name match
+                            if (name.toLowerCase().contains(productName.toLowerCase())) {
+                                if (colorBool) {
+                                    if (productColor.equalsIgnoreCase(color)) {
+                                        //If color is present from user input we compare and
+                                        // only validate if color and name match
+                                        if (brandBool) {
+                                            if (productBrand.equalsIgnoreCase(brand)) {
+                                                num++;
+                                                store = true;
+                                                storeOut = true;
+                                            }
+                                        } else {
+                                            num++;
+                                            store = true;
+                                            storeOut = true;
+                                        }
+                                    }
+                                } else {
                                     if (brandBool) {
                                         if (productBrand.equalsIgnoreCase(brand)) {
                                             num++;
@@ -610,44 +675,31 @@ public class VoiceInterface {
                                         storeOut = true;
                                     }
                                 }
-                            } else {
-                                if (brandBool) {
-                                    if (productBrand.equalsIgnoreCase(brand)) {
-                                        num++;
-                                        store = true;
-                                        storeOut = true;
-                                    }
-                                } else {
-                                    num++;
-                                    store = true;
-                                    storeOut = true;
-                                }
+                            }
+                            if (store) {
+                                orderEntries.add(entry);
+                                Log.d(TAG, "Adding orderEntry to list of OrderEntries");
                             }
                         }
-                        if (store) {
-                            orderEntries.add(entry);
-                            Log.d(TAG, "Adding orderEntry to list of OrderEntries");
-                        }
+                    }
+                    if (storeOut) {
+                        orders.add(new OrderList(orderList.get(i).order_number,
+                                orderList.get(i).order_date, orderEntries));
+                        Log.d(TAG, "Adding list of OrderEntries to list of orderList");
                     }
                 }
-                if (storeOut) {
-                    orders.add(new OrderList(orderList.get(i).order_number,
-                            orderList.get(i).order_date, orderEntries));
-                    Log.d(TAG, "Adding list of OrderEntries to list of orderList");
+            } else {
+                if (num == 0) {
+                    slangResolvedIntent.getCompletionStatement()
+                            .overrideNegative(getNegativePrompt(SlangUserConfig.getLocale()));
+                } else {
+                    Intent intent = new Intent(activity, OrderListActivity.class);
+                    intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_RETURN_PRODUCT);
+                    Log.d(TAG, "Order size is " + orders.size());
+                    intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    appContext.startActivity(intent);
                 }
-            }
-        } else {
-            if (num == 0) {
-                slangResolvedIntent.getCompletionStatement()
-                        .overrideNegative(getNegativePrompt(SlangUserConfig.getLocale()));
-            }
-            else {
-                Intent intent = new Intent(activity, OrderListActivity.class);
-                intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_RETURN_PRODUCT);
-                Log.d(TAG, "Order size is " + orders.size());
-                intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                appContext.startActivity(intent);
             }
         }
     }
@@ -691,44 +743,59 @@ public class VoiceInterface {
     }
 
     private static void refundProduct(SlangResolvedIntent slangResolvedIntent, boolean process) {
-        if(process) {
-            orders.clear();
-            num = 0;
-            String productName = String.valueOf(slangResolvedIntent
-                    .getEntity(ActivityDetector.ENTITY_PRODUCT).getValue());
-            Log.d(TAG, "Name is " + productName);
-            String productColor = String.valueOf(slangResolvedIntent
-                    .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
-            String productBrand = String.valueOf(slangResolvedIntent
-                    .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
-            boolean colorBool = false;
-            boolean brandBool = false;
-            colorList = new ArrayList<>();
-            colorNum = 0;
-            brandList = new ArrayList<>();
-            brandNum = 0;
-            List<OrderEntry> list;
-            if (!productColor.isEmpty())
-                colorBool = true;
-            if (!productBrand.isEmpty())
-                brandBool = true;
-            for (int i = 0; i < orderList.size(); i++) {
-                list = orderList.get(i).items;
-                List<OrderEntry> orderEntries = new ArrayList<>();
-                boolean storeOut = false;
-                for (int j = 0; j < list.size(); j++) {
-                    OrderEntry entry = list.get(j);
-                    String name = entry.title;
-                    String color = entry.color;
-                    String brand = entry.brand;
-                    if (entry.delivered && entry.returned && entry.pickup) {
-                        boolean store = false;
+        if(flag) {
+            if (process) {
+                flag = false;
+                orders.clear();
+                num = 0;
+                String productName = String.valueOf(slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_PRODUCT).getValue());
+                Log.d(TAG, "Name is " + productName);
+                String productColor = String.valueOf(slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
+                String productBrand = String.valueOf(slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
+                boolean colorBool = false;
+                boolean brandBool = false;
+                colorList = new ArrayList<>();
+                colorNum = 0;
+                brandList = new ArrayList<>();
+                brandNum = 0;
+                List<OrderEntry> list;
+                if (!productColor.isEmpty())
+                    colorBool = true;
+                if (!productBrand.isEmpty())
+                    brandBool = true;
+                for (int i = 0; i < orderList.size(); i++) {
+                    list = orderList.get(i).items;
+                    List<OrderEntry> orderEntries = new ArrayList<>();
+                    boolean storeOut = false;
+                    for (int j = 0; j < list.size(); j++) {
+                        OrderEntry entry = list.get(j);
+                        String name = entry.title;
+                        String color = entry.color;
+                        String brand = entry.brand;
+                        if (entry.delivered && entry.returned && entry.pickup) {
+                            boolean store = false;
 
-                        if (name.toLowerCase().contains(productName.toLowerCase())) {
-                            if (colorBool) {
-                                if (productColor.equalsIgnoreCase(color)) {
-                                    //If color is present from user input we compare and
-                                    // only validate if color and name match
+                            if (name.toLowerCase().contains(productName.toLowerCase())) {
+                                if (colorBool) {
+                                    if (productColor.equalsIgnoreCase(color)) {
+                                        //If color is present from user input we compare and
+                                        // only validate if color and name match
+                                        if (brandBool) {
+                                            if (productBrand.equalsIgnoreCase(brand)) {
+                                                num++;
+                                                store = true;
+                                                storeOut = true;
+                                            }
+                                        } else {
+                                            num++;
+                                            store = true;
+                                            storeOut = true;
+                                        }
+                                    }
+                                } else {
                                     if (brandBool) {
                                         if (productBrand.equalsIgnoreCase(brand)) {
                                             num++;
@@ -741,52 +808,39 @@ public class VoiceInterface {
                                         storeOut = true;
                                     }
                                 }
-                            } else {
-                                if (brandBool) {
-                                    if (productBrand.equalsIgnoreCase(brand)) {
-                                        num++;
-                                        store = true;
-                                        storeOut = true;
-                                    }
-                                } else {
-                                    num++;
-                                    store = true;
-                                    storeOut = true;
-                                }
+                            }
+                            if (store) {
+                                orderEntries.add(entry);
+                                Log.d(TAG, "Adding orderEntry to list of OrderEntries");
                             }
                         }
-                        if (store) {
-                            orderEntries.add(entry);
-                            Log.d(TAG, "Adding orderEntry to list of OrderEntries");
-                        }
+                    }
+                    if (storeOut) {
+                        orders.add(new OrderList(orderList.get(i).order_number,
+                                orderList.get(i).order_date, orderEntries));
+                        Log.d(TAG, "Adding list of OrderEntries to list of orderList");
                     }
                 }
-                if (storeOut) {
-                    orders.add(new OrderList(orderList.get(i).order_number,
-                            orderList.get(i).order_date, orderEntries));
-                    Log.d(TAG, "Adding list of OrderEntries to list of orderList");
+            } else {
+                if (num == 0) {
+                    switch (SlangUserConfig.getLocale().getLanguage()) {
+                        case "en":
+                            slangResolvedIntent.getCompletionStatement()
+                                    .overrideNegative("Sorry, no pending refunds matching your " +
+                                            "criteria were found.");
+                            break;
+                        case "hi":
+                            slangResolvedIntent.getCompletionStatement()
+                                    .overrideNegative("क्षमा करें आपके विनिर्देशों से मेल खाने वाली कोई लंबित " +
+                                            "धनवापसी नहीं मिली");
+                    }
+                } else {
+                    Intent intent = new Intent(appContext, OrderListActivity.class);
+                    intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_REFUND_PRODUCT);
+                    intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    appContext.startActivity(intent);
                 }
-            }
-        } else {
-            if (num == 0) {
-                switch (SlangUserConfig.getLocale().getLanguage()) {
-                    case "en":
-                        slangResolvedIntent.getCompletionStatement()
-                                .overrideNegative("Sorry, no pending refunds matching your " +
-                                        "criteria were found.");
-                        break;
-                    case "hi":
-                        slangResolvedIntent.getCompletionStatement()
-                                .overrideNegative("क्षमा करें आपके विनिर्देशों से मेल खाने वाली कोई लंबित " +
-                                        "धनवापसी नहीं मिली");
-                }
-            }
-            else {
-                Intent intent = new Intent(appContext, OrderListActivity.class);
-                intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_REFUND_PRODUCT);
-                intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                appContext.startActivity(intent);
             }
         }
     }
@@ -821,45 +875,59 @@ public class VoiceInterface {
     }
 
     private static void cancelOrder(SlangResolvedIntent slangResolvedIntent, boolean process) {
-        Activity activity = SlangScreenContext.getInstance().getCurrentActivity();
-        if (process) {
-            orders.clear();
-            num = 0;
-            String productName = String.valueOf(slangResolvedIntent
-                    .getEntity(ActivityDetector.ENTITY_PRODUCT).getValue());
-            Log.d(TAG, "Name is " + productName);
-            String productColor = String.valueOf(slangResolvedIntent
-                    .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
-            String productBrand = String.valueOf(slangResolvedIntent
-                    .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
-            boolean colorBool = false;
-            boolean brandBool = false;
-            colorList = new ArrayList<>();
-            colorNum = 0;
-            brandList = new ArrayList<>();
-            brandNum = 0;
-            List<OrderEntry> list;
-            if (!productColor.isEmpty())
-                colorBool = true;
-            if (!productBrand.isEmpty())
-                brandBool = true;
-            for (int i = 0; i < orderList.size(); i++) {
-                list = orderList.get(i).items;
-                List<OrderEntry> orderEntries = new ArrayList<>();
-                boolean storeOut = false;
-                for (int j = 0; j < list.size(); j++) {
-                    OrderEntry entry = list.get(j);
-                    String name = entry.title;
-                    String color = entry.color;
-                    String brand = entry.brand;
-                    if (!entry.returned && !entry.delivered && !entry.cancelled) {
-                        boolean store = false;
+        if (flag) {
+            final Activity activity = SlangScreenContext.getInstance().getCurrentActivity();
+            if (process) {
+                flag = false;
+                num = 0;
+                String productName = String.valueOf(slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_PRODUCT).getValue());
+                Log.d(TAG, "Name is " + productName);
+                String productColor = String.valueOf(slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
+                String productBrand = String.valueOf(slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
+                boolean colorBool = false;
+                boolean brandBool = false;
+                colorList = new ArrayList<>();
+                colorNum = 0;
+                brandList = new ArrayList<>();
+                brandNum = 0;
+                List<OrderEntry> list;
+                if (!productColor.isEmpty())
+                    colorBool = true;
+                if (!productBrand.isEmpty())
+                    brandBool = true;
+                for (int i = 0; i < orderList.size(); i++) {
+                    list = orderList.get(i).items;
+                    List<OrderEntry> orderEntries = new ArrayList<>();
+                    boolean storeOut = false;
+                    for (int j = 0; j < list.size(); j++) {
+                        OrderEntry entry = list.get(j);
+                        String name = entry.title;
+                        String color = entry.color;
+                        String brand = entry.brand;
+                        if (!entry.returned && !entry.delivered && !entry.cancelled) {
+                            boolean store = false;
 
-                        if (name.toLowerCase().contains(productName.toLowerCase())) {
-                            if (colorBool) {
-                                if (productColor.equalsIgnoreCase(color)) {
-                                    //If color is present from user input we compare and
-                                    // only validate if color and name match
+                            if (name.toLowerCase().contains(productName.toLowerCase())) {
+                                if (colorBool) {
+                                    if (productColor.equalsIgnoreCase(color)) {
+                                        //If color is present from user input we compare and
+                                        // only validate if color and name match
+                                        if (brandBool) {
+                                            if (productBrand.equalsIgnoreCase(brand)) {
+                                                num++;
+                                                store = true;
+                                                storeOut = true;
+                                            }
+                                        } else {
+                                            num++;
+                                            store = true;
+                                            storeOut = true;
+                                        }
+                                    }
+                                } else {
                                     if (brandBool) {
                                         if (productBrand.equalsIgnoreCase(brand)) {
                                             num++;
@@ -872,54 +940,85 @@ public class VoiceInterface {
                                         storeOut = true;
                                     }
                                 }
-                            } else {
-                                if (brandBool) {
-                                    if (productBrand.equalsIgnoreCase(brand)) {
-                                        num++;
-                                        store = true;
-                                        storeOut = true;
-                                    }
-                                } else {
-                                    num++;
-                                    store = true;
-                                    storeOut = true;
-                                }
+                            }
+                            if (store) {
+                                orderEntries.add(entry);
+                                Log.d(TAG, "Adding orderEntry to list of OrderEntries");
+                                Log.d(TAG, "name of product is " + name);
                             }
                         }
-                        if (store) {
-                            orderEntries.add(entry);
-                            Log.d(TAG, "Adding orderEntry to list of OrderEntries");
-                            Log.d(TAG, "name of product is " + name);
-                        }
+                    }
+                    if (storeOut) {
+                        orders.add(new OrderList(orderList.get(i).order_number,
+                                orderList.get(i).order_date, orderEntries));
+                        Log.d(TAG, "Adding list of OrderEntries to list of orderList");
                     }
                 }
-                if (storeOut) {
-                    orders.add(new OrderList(orderList.get(i).order_number,
-                            orderList.get(i).order_date, orderEntries));
-                    Log.d(TAG, "Adding list of OrderEntries to list of orderList");
-                }
-            }
-        } else {
-            if (num == 0) {
-                switch (SlangUserConfig.getLocale().getLanguage()) {
-                    case "en":
-                        slangResolvedIntent.getCompletionStatement()
-                                .overrideNegative("Sorry, no products eligible for cancellation" +
-                                        " found");
-                        break;
-                    case "hi":
-                        slangResolvedIntent.getCompletionStatement()
-                                .overrideNegative("क्षमा करें, रद्दीकरण के लिए योग्य कोई आर्डर नहीं मिला");
+            } else {
+                if (num == 0) {
+                    switch (SlangUserConfig.getLocale().getLanguage()) {
+                        case "en":
+                            slangResolvedIntent.getCompletionStatement()
+                                    .overrideNegative("Sorry, no products eligible for cancellation" +
+                                            " found");
+                            break;
+                        case "hi":
+                            slangResolvedIntent.getCompletionStatement()
+                                    .overrideNegative("क्षमा करें, रद्दीकरण के लिए योग्य कोई आर्डर नहीं मिला");
 
+                    }
+                } else {
+                    //TODO call the function here, in case user says cancel current, we have no entities
+                    // check what current fragment is, and then resolve entity appropriately
+                /*if (activity instanceof OrderListActivity) {
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Fragment currentFragment =
+                                    ((OrderListActivity) activity)
+                                    .getSupportFragmentManager()
+                                    .findFragmentById(R.id.orderListContainer);
+                            if (currentFragment.getTag().equals(ActivityDetector.TAG_ORDER_ENTRY)) {
+                                Toast.makeText(activity, "WE CAN RESOLVE THIS", Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    });
+                }*/
+                    Intent intent = new Intent(activity, OrderListActivity.class);
+                    intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_CANCEL_PRODUCT);
+                    intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    appContext.startActivity(intent);
                 }
             }
-            else {
-                Intent intent = new Intent(activity, OrderListActivity.class);
-                intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_CANCEL_PRODUCT);
-                intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                appContext.startActivity(intent);
-            }
+        }
+    }
+
+    private static void cancelCurrent(final SlangResolvedIntent slangResolvedIntent) {
+        final Activity activity = SlangScreenContext.getInstance().getCurrentActivity();
+        if (activity instanceof OrderListActivity) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Fragment currentFragment =
+                            ((OrderListActivity) activity)
+                                    .getSupportFragmentManager()
+                                    .findFragmentById(R.id.orderListContainer);
+                    if (currentFragment.getTag().equals(ActivityDetector.TAG_ORDER_ENTRY)) {
+                        Toast.makeText(activity, "WE CAN RESOLVE THIS", Toast.LENGTH_LONG).show();
+                        //TODO set current to true here
+                        Log.d(TAG, "CAN BE RESOLVED");
+
+                        // Set the click and dialog box creation in another function in the Fragment
+                        // just call those functions and return slangSession.success();
+                    }
+                    else if (currentFragment.getTag().equals(ActivityDetector.TAG_ORDER_ENTRY)) {
+                        Toast.makeText(activity, "CANNOT Resolve this", Toast.LENGTH_LONG).show();
+                        Log.d(TAG, "CANNOT BE RESOLVED");
+                        //TODO set current to false here
+                    }
+                }
+            });
         }
     }
 

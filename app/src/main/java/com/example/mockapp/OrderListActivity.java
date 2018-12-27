@@ -28,6 +28,8 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
 
         SlangUI.showTrigger();
 
+        //TODO figure out not starting new activities, just keep replacing fragments
+
         Intent intent = getIntent();
         String mode = intent.getStringExtra(ActivityDetector.ACTIVITY_MODE);
 
@@ -35,7 +37,7 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
             if (mode == null) {
                 getSupportFragmentManager()
                         .beginTransaction()
-                        .add(R.id.orderListContainer, new OrderListFragment())
+                        .add(R.id.orderListContainer, new OrderListFragment(), ActivityDetector.TAG_ORDER_LIST)
                         .commit();
             } else {
                 Bundle bundle = new Bundle();
@@ -49,7 +51,7 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                         orderListFragment.setArguments(bundle);
                         getSupportFragmentManager()
                                 .beginTransaction()
-                                .add(R.id.orderListContainer, orderListFragment)
+                                .add(R.id.orderListContainer, orderListFragment, ActivityDetector.TAG_ORDER_LIST)
                                 .commit();
                         break;
                     case ActivityDetector.MODE_TRACK_DEFAULT:
@@ -65,7 +67,7 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                         orderEntryFragment.setArguments(bundle);
                         getSupportFragmentManager()
                                 .beginTransaction()
-                                .add(R.id.orderListContainer, orderEntryFragment)
+                                .add(R.id.orderListContainer, orderEntryFragment, ActivityDetector.TAG_ORDER_ENTRY)
                                 .commit();
                         break;
                     case ActivityDetector.MODE_TRACK_PRODUCT:
@@ -83,7 +85,7 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                             orderListFragment.setArguments(bundle);
                             getSupportFragmentManager()
                                     .beginTransaction()
-                                    .add(R.id.orderListContainer, orderListFragment)
+                                    .add(R.id.orderListContainer, orderListFragment, ActivityDetector.TAG_ORDER_LIST)
                                     .commit();
                         } else {
                             orderEntryFragment = new OrderEntryFragment();
@@ -95,7 +97,7 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
                             orderEntryFragment.setArguments(bundle);
                             getSupportFragmentManager()
                                     .beginTransaction()
-                                    .add(R.id.orderListContainer, orderEntryFragment)
+                                    .add(R.id.orderListContainer, orderEntryFragment, ActivityDetector.TAG_ORDER_ENTRY)
                                     .commit();
                         }
                         break;
@@ -105,11 +107,11 @@ public class OrderListActivity extends AppCompatActivity implements NavigationHo
     }
 
     @Override
-    public void navigateTo(Fragment fragment, boolean addToBackstack) {
+    public void navigateTo(Fragment fragment, boolean addToBackstack, String tag) {
         FragmentTransaction transaction =
                 getSupportFragmentManager()
                         .beginTransaction()
-                        .replace(R.id.orderListContainer, fragment);
+                        .replace(R.id.orderListContainer, fragment, tag);
 
         if (addToBackstack) {
             transaction.addToBackStack(null);
