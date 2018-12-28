@@ -226,10 +226,26 @@ public class VoiceInterface {
 
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_RETURN_PRODUCT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
+
+                    @Override
+                    public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent, SlangSession session) {
+                        orders.clear();
+                        flag = true;
+                        current = false;
+                        return super.onIntentResolutionBegin(intent, session);
+                    }
+
                     @Override
                     public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                        if(flag) {
+                            resolveCurrent(slangResolvedIntent, ActivityDetector.MODE_RETURN_PRODUCT);
+                            if (!current)
+                                returnProduct(slangResolvedIntent, true);
+                        }
                         flag = true;
-                        returnProduct(slangResolvedIntent, false);
+                        if (!current) {
+                            returnProduct(slangResolvedIntent, false);
+                        }
                         if (num > 0) {
                             slangResolvedIntent.getCompletionStatement()
                                     .overrideAffirmative(
@@ -283,12 +299,16 @@ public class VoiceInterface {
                     @Override
                     public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
                         if(flag) {
-                            cancelCurrent(slangResolvedIntent);
+                            resolveCurrent(slangResolvedIntent, ActivityDetector.MODE_CANCEL_PRODUCT);
+                            Log.d(TAG, "Inside if flag Current is " + current);
                             if (!current)
                                 cancelOrder(slangResolvedIntent, true);
                         }
                         flag = true;
-                        cancelOrder(slangResolvedIntent, false);
+                        Log.d(TAG, "Outside if flag Current is " + current);
+                        if (!current) {
+                            cancelOrder(slangResolvedIntent, false);
+                        }
                         if (num > 0) {
                             slangResolvedIntent.getCompletionStatement()
                                     .overrideAffirmative(
@@ -301,21 +321,6 @@ public class VoiceInterface {
                         }
                         else {
                             return slangSession.failure();
-                        }
-                    }
-
-                    @Override
-                    public SlangSession.Status onEntityUnresolved(SlangEntity entity, SlangSession session) {
-                        Log.d(TAG, "Entity Unresolved for Cancel Intent");
-                        switch (entity.getName()) {
-                            case ActivityDetector.ENTITY_PRODUCT:
-                            case ActivityDetector.ENTITY_COLOR:
-                            case ActivityDetector.ENTITY_BRAND:
-                                Log.d(TAG, "Entity Unresolved for Cancel Intent");
-                                cancelCurrent(entity.getParent());
-                                return session.success();
-                            default:
-                                return super.onEntityUnresolved(entity, session);
                         }
                     }
 
@@ -612,7 +617,6 @@ public class VoiceInterface {
             Activity activity = SlangScreenContext.getInstance().getCurrentActivity();
             if (process) {
                 flag = false;
-                orders.clear();
                 num = 0;
                 String productName = String.valueOf(slangResolvedIntent
                         .getEntity(ActivityDetector.ENTITY_PRODUCT).getValue());
@@ -968,22 +972,6 @@ public class VoiceInterface {
 
                     }
                 } else {
-                    //TODO call the function here, in case user says cancel current, we have no entities
-                    // check what current fragment is, and then resolve entity appropriately
-                /*if (activity instanceof OrderListActivity) {
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Fragment currentFragment =
-                                    ((OrderListActivity) activity)
-                                    .getSupportFragmentManager()
-                                    .findFragmentById(R.id.orderListContainer);
-                            if (currentFragment.getTag().equals(ActivityDetector.TAG_ORDER_ENTRY)) {
-                                Toast.makeText(activity, "WE CAN RESOLVE THIS", Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    });
-                }*/
                     Intent intent = new Intent(activity, OrderListActivity.class);
                     intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_CANCEL_PRODUCT);
                     intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
@@ -994,31 +982,76 @@ public class VoiceInterface {
         }
     }
 
-    private static void cancelCurrent(final SlangResolvedIntent slangResolvedIntent) {
+    private static void resolveCurrent(SlangResolvedIntent slangResolvedIntent, String mode) {
         final Activity activity = SlangScreenContext.getInstance().getCurrentActivity();
         if (activity instanceof OrderListActivity) {
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Fragment currentFragment =
-                            ((OrderListActivity) activity)
-                                    .getSupportFragmentManager()
-                                    .findFragmentById(R.id.orderListContainer);
-                    if (currentFragment.getTag().equals(ActivityDetector.TAG_ORDER_ENTRY)) {
-                        Toast.makeText(activity, "WE CAN RESOLVE THIS", Toast.LENGTH_LONG).show();
-                        //TODO set current to true here
-                        Log.d(TAG, "CAN BE RESOLVED");
+            final Fragment currentFragment = ((OrderListActivity) activity)
+                    .getSupportFragmentManager()
+                    .findFragmentById(R.id.orderListContainer);
+            if (currentFragment.getTag().equals(ActivityDetector.TAG_ORDER_ENTRY)) {
+                Log.d(TAG, "MAY BE RESOLVED");
 
-                        // Set the click and dialog box creation in another function in the Fragment
-                        // just call those functions and return slangSession.success();
+                final OrderEntryFragment orderEntryFragment = (OrderEntryFragment) currentFragment;
+                final OrderEntry entry = orderEntryFragment.getOrderEntry();
+                final String date = String.valueOf(new java.sql.Date(System.currentTimeMillis()));
+                current = true;
+
+                SharedPreferences sharedPreferences = activity.getSharedPreferences(
+                        ActivityDetector.PREFERENCES, Context.MODE_PRIVATE
+                );
+
+                boolean process = false;
+                boolean present = sharedPreferences.getBoolean(entry.title + ActivityDetector.PREF_KEY_BOOL, false);
+                if (mode.equals(ActivityDetector.MODE_CANCEL_PRODUCT)) {
+                    process = (!entry.returned && !entry.delivered && !entry.cancelled) && !present;
+                }
+                else if (mode.equals(ActivityDetector.MODE_RETURN_PRODUCT)) {
+                    process = !entry.returned && entry.delivered && !entry.cancelled && !present;
+                }
+
+                if (process) {
+                    Log.d(TAG, "Current is true");
+                    num = 1;
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.d(TAG, "Running on UI thread");
+                            orderEntryFragment.setOnClickListener(entry, date);
+                        }
+                    });
+                }
+                else {
+                    num = 0;
+                    if (mode.equals(ActivityDetector.MODE_CANCEL_PRODUCT)) {
+                        switch (SlangUserConfig.getLocale().getLanguage()) {
+                            case "en":
+                                slangResolvedIntent.getCompletionStatement()
+                                        .overrideNegative("Sorry, this order cannot be cancelled.");
+                                break;
+                            case "hi":
+                                slangResolvedIntent.getCompletionStatement()
+                                        .overrideNegative("क्षमा करें, यह आर्डर रद्द नहीं किया जा सकता है.");
+                                break;
+                        }
                     }
-                    else if (currentFragment.getTag().equals(ActivityDetector.TAG_ORDER_ENTRY)) {
-                        Toast.makeText(activity, "CANNOT Resolve this", Toast.LENGTH_LONG).show();
-                        Log.d(TAG, "CANNOT BE RESOLVED");
-                        //TODO set current to false here
+                    else if (mode.equals(ActivityDetector.MODE_RETURN_PRODUCT)) {
+                        switch (SlangUserConfig.getLocale().getLanguage()) {
+                            case "en":
+                                slangResolvedIntent.getCompletionStatement()
+                                        .overrideNegative("Sorry, this order cannot be returned.");
+                                break;
+                            case "hi":
+                                slangResolvedIntent.getCompletionStatement()
+                                        .overrideNegative("क्षमा करें, यह आर्डर वापस नहीं किया जा सकता है.");
+                                break;
+                        }
                     }
                 }
-            });
+            }
+            else if (currentFragment.getTag().equals(ActivityDetector.TAG_ORDER_ENTRY)) { ;
+                Log.d(TAG, "CANNOT BE RESOLVED");
+                current = false;
+            }
         }
     }
 

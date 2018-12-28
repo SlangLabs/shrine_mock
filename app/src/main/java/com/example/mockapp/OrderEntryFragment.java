@@ -12,8 +12,6 @@ import android.support.design.button.MaterialButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -32,8 +30,6 @@ import com.example.mockapp.slang.ActivityDetector;
 
 import java.util.List;
 
-import in.slanglabs.platform.ui.SlangScreenContext;
-
 import static android.view.View.GONE;
 
 
@@ -43,11 +39,11 @@ public class OrderEntryFragment extends Fragment {
     private MaterialButton featured;
     private MaterialButton myAccount, feedback;
     private String orderNumber;
-    private String orderDate;
+    private String orderDateString;
     private List<OrderEntry> orderEntries;
+    private OrderEntry orderEntry;
     private TextView orderNum;
-    private TextView date;
-    private ImageView cancelled;
+    private TextView orderDate;
     private String mode;
 
     private TextView title;
@@ -72,9 +68,10 @@ public class OrderEntryFragment extends Fragment {
             mode = bundle.getString(ActivityDetector.ACTIVITY_MODE);
             Log.d(TAG, "Mode is " + mode);
             orderNumber = bundle.getString(ActivityDetector.ORDER_NUMBER);
-            orderDate = bundle.getString(ActivityDetector.ORDER_DATE);
+            orderDateString = bundle.getString(ActivityDetector.ORDER_DATE);
             //TODO convert this to single item
             orderEntries = bundle.getParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST);
+            orderEntry = orderEntries.get(0);
         }
     }
 
@@ -125,11 +122,11 @@ public class OrderEntryFragment extends Fragment {
         });
 
         orderNum = view.findViewById(R.id.order_entry_number);
-        date = view.findViewById(R.id.order_entry_date);
+        orderDate = view.findViewById(R.id.order_entry_date);
         //recyclerView = view.findViewById(R.id.recycler_view_order_entry);
 
         orderNum.setText(orderNumber);
-        date.setText(orderDate);
+        orderDate.setText(orderDateString);
 
         SharedPreferences sharedPreferences = getContext().getSharedPreferences(
                 ActivityDetector.PREFERENCES, Context.MODE_PRIVATE
@@ -140,7 +137,7 @@ public class OrderEntryFragment extends Fragment {
         pickUpDate.setVisibility(GONE);
         final String date = String.valueOf(new java.sql.Date(System.currentTimeMillis()));
 
-        final OrderEntry entry = orderEntries.get(0);
+        final OrderEntry entry = orderEntry;
         ImageRequester imageRequester = ImageRequester.getInstance();
         imageRequester.setImageFromUrl(orderImage, entry.url);
         title.setText(entry.title);
@@ -191,54 +188,7 @@ public class OrderEntryFragment extends Fragment {
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                builder.setTitle("Confirmation for " + entry.title +" by " + entry.brand);
-                builder.setMessage("Are you sure you want to proceed?");
-                builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (entry.delivered) {
-                            status.setText(R.string.returned);
-                            status.setTextColor(Color.rgb(255, 102, 0));
-                            //cancelButton.setEnabled(false);
-                            cancelButton.setVisibility(GONE);
-                            String return_date = "Return Date: " + date;
-                            returnDate.setText(return_date);
-                            returnDate.setVisibility(View.VISIBLE);
-                            location.setVisibility(View.GONE);
-                            editor.putBoolean(entry.title + ActivityDetector.PREF_KEY_BOOL, true);
-                            editor.putString(entry.title, ActivityDetector.RETURN_PREF);
-                            editor.putString(entry.title + ActivityDetector.PREF_KEY_DATE, date);
-                            editor.apply();
-                        } else {
-                            cancelledOverlay.setVisibility(View.VISIBLE);
-                            status.setText(R.string.cancelled);
-                            status.setTextColor(Color.RED);
-                            //cancelButton.setEnabled(false);
-                            cancelButton.setVisibility(GONE);
-                            String cancellation_date = "Cancellation Date: " + date;
-                            returnDate.setText(cancellation_date);
-                            returnDate.setVisibility(View.VISIBLE);
-                            location.setVisibility(View.GONE);
-                            entry.cancelled = true;
-                            editor.putBoolean(entry.title + ActivityDetector.PREF_KEY_BOOL, true);
-                            editor.putString(entry.title, ActivityDetector.CANCEL_PREF);
-                            editor.putString(entry.title + ActivityDetector.PREF_KEY_DATE, date);
-                            editor.apply();
-                        }
-                        dialog.dismiss();
-                    }
-                });
-                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-                AlertDialog dialog = builder.create();
-                dialog.show();
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getContext().getResources().getColor(R.color.darkRed));
-                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getContext().getResources().getColor(R.color.darkGreen));
+                setOnClickListener(entry, date);
             }
         });
 
@@ -347,5 +297,72 @@ public class OrderEntryFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater menuInflater) {
         menuInflater.inflate(R.menu.shr_toolbar_menu, menu);
         super.onCreateOptionsMenu(menu, menuInflater);
+    }
+
+    public void setOnClickListener(final OrderEntry entry, final String date) {
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences(
+                ActivityDetector.PREFERENCES, Context.MODE_PRIVATE
+        );
+        final SharedPreferences.Editor editor = sharedPreferences.edit();
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Confirmation for " + entry.title +" by " + entry.brand);
+        builder.setMessage("Are you sure you want to proceed?");
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (entry.delivered) {
+                    status.setText(R.string.returned);
+                    status.setTextColor(Color.rgb(255, 102, 0));
+                    //cancelButton.setEnabled(false);
+                    cancelButton.setVisibility(GONE);
+                    String return_date = "Return Date: " + date;
+                    returnDate.setText(return_date);
+                    returnDate.setVisibility(View.VISIBLE);
+                    location.setVisibility(View.GONE);
+                    editor.putBoolean(entry.title + ActivityDetector.PREF_KEY_BOOL, true);
+                    editor.putString(entry.title, ActivityDetector.RETURN_PREF);
+                    editor.putString(entry.title + ActivityDetector.PREF_KEY_DATE, date);
+                    editor.apply();
+                } else {
+                    cancelledOverlay.setVisibility(View.VISIBLE);
+                    status.setText(R.string.cancelled);
+                    status.setTextColor(Color.RED);
+                    //cancelButton.setEnabled(false);
+                    cancelButton.setVisibility(GONE);
+                    String cancellation_date = "Cancellation Date: " + date;
+                    returnDate.setText(cancellation_date);
+                    returnDate.setVisibility(View.VISIBLE);
+                    location.setVisibility(View.GONE);
+                    entry.cancelled = true;
+                    editor.putBoolean(entry.title + ActivityDetector.PREF_KEY_BOOL, true);
+                    editor.putString(entry.title, ActivityDetector.CANCEL_PREF);
+                    editor.putString(entry.title + ActivityDetector.PREF_KEY_DATE, date);
+                    editor.apply();
+                }
+                dialog.dismiss();
+            }
+        });
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getContext().getResources().getColor(R.color.darkRed));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getContext().getResources().getColor(R.color.darkGreen));
+    }
+
+    public OrderEntry getOrderEntry() {
+        return orderEntry;
+    }
+
+    public String getOrderNumber() {
+        return orderNumber;
+    }
+
+    public String getOrderDateString() {
+        return orderDateString;
     }
 }
