@@ -18,7 +18,10 @@ import com.example.mockapp.network.OrderEntry;
 import com.example.mockapp.network.OrderList;
 import com.slanglabs.slang.internal.util.SlangUserConfig;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -43,19 +46,23 @@ public class VoiceInterface {
     private static int num, brandNum, colorNum;
     private static boolean flag = true;
     private static boolean current = false;
+    private static boolean cardinal = false;
 
-    public static void init(final Application appContext, String appId, String authKey) throws SlangLocaleException {
+    public static void init(final Application appContext, String appId, String authKey)
+            throws SlangLocaleException {
         VoiceInterface.appContext = appContext;
         orderList = OrderList.initOrderList(appContext.getResources());
         orders = new ArrayList<>();
 
-        SharedPreferences sharedPreferences = appContext.getSharedPreferences(ActivityDetector.PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = appContext
+                .getSharedPreferences(ActivityDetector.PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();
         editor.apply();
 
-        SlangApplication.initialize(appContext, appId, authKey, SlangApplication.getSupportedLocales(),
-                SlangApplication.LOCALE_ENGLISH_IN, new ISlangApplicationStateListener() {
+        SlangApplication.initialize(appContext, appId, authKey,
+                SlangApplication.getSupportedLocales(), SlangApplication.LOCALE_ENGLISH_IN,
+                new ISlangApplicationStateListener() {
             @Override
             public void onInitialized() {
                 try {
@@ -70,7 +77,7 @@ public class VoiceInterface {
 
             @Override
             public void onInitializationFailed(FailureReason failureReason) {
-                Toast.makeText(appContext, "Not able to initialize", Toast.LENGTH_LONG).show();
+                Toast.makeText(appContext, "Slang not initialized", Toast.LENGTH_LONG).show();
                 Log.d(TAG, "Failure Reason: " + failureReason);
             }
         });
@@ -85,7 +92,8 @@ public class VoiceInterface {
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_DEFAULT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
+                                                      SlangSession slangSession) {
                         Log.d(TAG, "Slang Triggering Default Track Intent");
                         return trackDefault(slangSession, ActivityDetector.MODE_TRACK_DEFAULT);
                     }
@@ -94,21 +102,41 @@ public class VoiceInterface {
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_PRODUCT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
-                    public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent, SlangSession session) {
+                    public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent,
+                                                                       SlangSession session) {
                         orders.clear();
                         flag = true;
                         return super.onIntentResolutionBegin(intent, session);
                     }
 
                     @Override
-                    public SlangSession.Status onEntityResolved(SlangEntity entity, SlangSession session) {
+                    public SlangSession.Status onEntityResolved(SlangEntity entity,
+                                                                SlangSession session) {
                         Log.d(TAG, "Calling onEntityResolved");
                         switch (entity.getName()) {
                             case ActivityDetector.ENTITY_PRODUCT:
                             case ActivityDetector.ENTITY_COLOR:
                             case ActivityDetector.ENTITY_BRAND:
-                                Log.d(TAG, "Entity Product");
+                            case ActivityDetector.ENTITY_CARDINAL:
+                                Log.d(TAG, "Entity resolved");
+                                if (entity.getName().equals(ActivityDetector.ENTITY_CARDINAL))
+                                    Log.d(TAG, "Cardinal value is " + entity.getValue());
                                 trackProduct(entity.getParent(), true);
+                                return session.success();
+                            case ActivityDetector.ENTITY_DATE:
+                                Log.d(TAG, "Date entity value is " + entity.getValue());
+                                SimpleDateFormat dateFormat =
+                                        new SimpleDateFormat("yyyy-MM-dd");
+                                try {
+                                    Date userDate = dateFormat.parse(entity.getValue());
+                                    Date date = new Date();
+                                    if (date.compareTo(userDate) > 0)
+                                        Log.d(TAG, "Case true");
+                                    else
+                                        Log.d(TAG, "Case false");
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
                                 return session.success();
                             default:
                                 return super.onEntityResolved(entity, session);
@@ -116,7 +144,8 @@ public class VoiceInterface {
                     }
 
                     @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
+                                                      SlangSession slangSession) {
                         Log.d(TAG, "Slang Triggering Product Track Intent");
                         flag = true;
                         trackProduct(slangResolvedIntent, false);
@@ -136,7 +165,8 @@ public class VoiceInterface {
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_ALL)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
+                                                      SlangSession slangSession) {
                         Log.d(TAG, "Slang Triggering All Track Intent");
                         return trackDefault(slangSession, ActivityDetector.MODE_TRACK_ALL);
                     }
@@ -145,22 +175,26 @@ public class VoiceInterface {
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_REFUND_DEFAULT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
+                                                      SlangSession slangSession) {
                         Log.d(TAG, "Slang Triggering Default Refund Intent");
-                        return refundDefault(slangResolvedIntent, slangSession, ActivityDetector.MODE_REFUND_DEFAULT);
+                        return refundDefault(slangResolvedIntent, slangSession,
+                                ActivityDetector.MODE_REFUND_DEFAULT);
                     }
                 });
 
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_REFUND_PRODUCT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
-                    public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent, SlangSession session) {
+                    public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent,
+                                                                       SlangSession session) {
                         flag = true;
                         return super.onIntentResolutionBegin(intent, session);
                     }
 
                     @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
+                                                      SlangSession slangSession) {
                         Log.d(TAG, "Slang Triggering Product Refund Intent");
                         flag = true;
                         refundProduct(slangResolvedIntent, false);
@@ -178,7 +212,8 @@ public class VoiceInterface {
                     }
 
                     @Override
-                    public SlangSession.Status onEntityResolved(SlangEntity entity, SlangSession session) {
+                    public SlangSession.Status onEntityResolved(SlangEntity entity,
+                                                                SlangSession session) {
                         switch (entity.getName()) {
                             case ActivityDetector.ENTITY_PRODUCT:
                             case ActivityDetector.ENTITY_COLOR:
@@ -195,7 +230,8 @@ public class VoiceInterface {
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_RETURN)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
+                                                      SlangSession slangSession) {
                         trackReturn(slangResolvedIntent, true);
                         trackReturn(slangResolvedIntent, false);
                         Log.d(TAG, "Slang Triggering Track Return Intent");
@@ -218,7 +254,8 @@ public class VoiceInterface {
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_RETURN_DEFAULT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
+                                                      SlangSession slangSession) {
                         Log.d(TAG, "Slang Triggering Default Return Intent");
                         return returnDefault(slangSession, ActivityDetector.MODE_RETURN_DEFAULT);
                     }
@@ -228,7 +265,8 @@ public class VoiceInterface {
                 .setResolutionAction(new DefaultResolvedIntentAction() {
 
                     @Override
-                    public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent, SlangSession session) {
+                    public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent,
+                                                                       SlangSession session) {
                         orders.clear();
                         flag = true;
                         current = false;
@@ -236,9 +274,11 @@ public class VoiceInterface {
                     }
 
                     @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
+                                                      SlangSession slangSession) {
                         if(flag) {
-                            resolveCurrent(slangResolvedIntent, ActivityDetector.MODE_RETURN_PRODUCT);
+                            resolveCurrent(slangResolvedIntent,
+                                    ActivityDetector.MODE_RETURN_PRODUCT);
                             if (!current)
                                 returnProduct(slangResolvedIntent, true);
                         }
@@ -262,7 +302,8 @@ public class VoiceInterface {
                     }
 
                     @Override
-                    public SlangSession.Status onEntityResolved(SlangEntity entity, SlangSession session) {
+                    public SlangSession.Status onEntityResolved(SlangEntity entity,
+                                                                SlangSession session) {
                         switch (entity.getName()) {
                             case ActivityDetector.ENTITY_PRODUCT:
                             case ActivityDetector.ENTITY_COLOR:
@@ -279,7 +320,8 @@ public class VoiceInterface {
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_CANCEL_DEFAULT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
+                                                      SlangSession slangSession) {
                         Log.d(TAG, "Slang Triggering Default Cancel Intent");
                         return cancelDefault(slangSession, ActivityDetector.MODE_RETURN_DEFAULT);
                     }
@@ -289,7 +331,8 @@ public class VoiceInterface {
                 .setResolutionAction(new DefaultResolvedIntentAction() {
 
                     @Override
-                    public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent, SlangSession session) {
+                    public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent,
+                                                                       SlangSession session) {
                         orders.clear();
                         flag = true;
                         current = false;
@@ -297,9 +340,11 @@ public class VoiceInterface {
                     }
 
                     @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
+                                                      SlangSession slangSession) {
                         if(flag) {
-                            resolveCurrent(slangResolvedIntent, ActivityDetector.MODE_CANCEL_PRODUCT);
+                            resolveCurrent(slangResolvedIntent,
+                                    ActivityDetector.MODE_CANCEL_PRODUCT);
                             Log.d(TAG, "Inside if flag Current is " + current);
                             if (!current)
                                 cancelOrder(slangResolvedIntent, true);
@@ -325,7 +370,8 @@ public class VoiceInterface {
                     }
 
                     @Override
-                    public SlangSession.Status onEntityResolved(SlangEntity entity, SlangSession session) {
+                    public SlangSession.Status onEntityResolved(SlangEntity entity,
+                                                                SlangSession session) {
                         Log.d(TAG, "Entity Resolved for Cancel Intent");
                         switch (entity.getName()) {
                             case ActivityDetector.ENTITY_PRODUCT:
@@ -342,7 +388,8 @@ public class VoiceInterface {
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_CONTACT_SUPPORT)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
+                                                      SlangSession slangSession) {
                         appContext.startActivity(new Intent(appContext, FeedbackActivity.class));
                         return slangSession.success();
                     }
@@ -351,7 +398,8 @@ public class VoiceInterface {
         SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_NO_VOICE)
                 .setResolutionAction(new DefaultResolvedIntentAction() {
                     @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession) {
+                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
+                                                      SlangSession slangSession) {
                         return slangSession.success();
                     }
                 });
@@ -459,7 +507,8 @@ public class VoiceInterface {
                 Intent intent = new Intent(activity, OrderListActivity.class);
                 intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_RETURN);
                 Log.d(TAG, "Order size is " + orders.size());
-                intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
+                intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST,
+                        (ArrayList<OrderList>) orders);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 appContext.startActivity(intent);
             }
@@ -476,11 +525,15 @@ public class VoiceInterface {
         return slangSession.success();
     }
 
-    private static void trackProduct(final SlangResolvedIntent slangResolvedIntent, boolean process) {
+    private static void trackProduct(final SlangResolvedIntent slangResolvedIntent,
+                                     boolean process) {
         if (flag) {
             if (process) {
                 flag = false;
                 num = 0;
+                boolean colorBool = false;
+                boolean brandBool = false;
+                //boolean cardinalBool = false;
                 String productName = String.valueOf(slangResolvedIntent
                         .getEntity(ActivityDetector.ENTITY_PRODUCT).getValue());
                 Log.d(TAG, "Name is " + productName);
@@ -488,84 +541,119 @@ public class VoiceInterface {
                         .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
                 String productBrand = String.valueOf(slangResolvedIntent
                         .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
-                boolean colorBool = false;
-                boolean brandBool = false;
+                String numberString = slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_CARDINAL).getValue();
+                int numberValues = -1;
+                if (numberString != null) {
+                    numberValues = Integer.valueOf(numberString);
+                    cardinal = true;
+                }
                 colorList = new ArrayList<>();
                 colorNum = 0;
                 brandList = new ArrayList<>();
                 brandNum = 0;
                 List<OrderEntry> list;
+                //int storeCounter = 0;
 
-                if (!productColor.isEmpty())
-                    colorBool = true;
-                if (!productBrand.isEmpty())
-                    brandBool = true;
-                for (int i = 0; i < orderList.size(); i++) {
-                    list = orderList.get(i).items;
-                    List<OrderEntry> orderEntries = new ArrayList<>();
-                    boolean storeOut = false;
-                    for (int j = 0; j < list.size(); j++) {
-                        OrderEntry entry = list.get(j);
-                        String name = entry.title;
-                        String color = entry.color;
-                        String brand = entry.brand;
-                        boolean store = false;
+                //TODO if cardinalBool is true add top n items to the list and done
+                if (cardinal) {
+                    if (numberValues > orderList.size()) {
+                        orders = orderList;
+                        num = orderList.size();
+                    }
+                    else {
+                        orders = new ArrayList<>(orderList.subList(0, numberValues));
+                        num = numberValues;
+                    }
+                }
+                else {
+                    if (!productColor.isEmpty())
+                        colorBool = true;
+                    if (!productBrand.isEmpty())
+                        brandBool = true;
+                    for (int i = 0; i < orderList.size(); i++) {
+                        list = orderList.get(i).items;
+                        List<OrderEntry> orderEntries = new ArrayList<>();
+                        boolean storeOut = false;
+                        for (int j = 0; j < list.size(); j++) {
+                            OrderEntry entry = list.get(j);
+                            String name = entry.title;
+                            String color = entry.color;
+                            String brand = entry.brand;
+                            boolean store = false;
 
-                        if (name.toLowerCase().contains(productName.toLowerCase())) {
-                            if (colorBool) {
-                                if (productColor.equalsIgnoreCase(color)) {
-                                    if (brandBool) {
-                                        if (productColor.equalsIgnoreCase(brand)) {
+                            if (name.toLowerCase().contains(productName.toLowerCase())) {
+                                if (colorBool) {
+                                    if (productColor.equalsIgnoreCase(color)) {
+                                        if (brandBool) {
+                                            if (productColor.equalsIgnoreCase(brand)) {
+                                                num++;
+                                                //storeCounter++;
+                                                store = true;
+                                                storeOut = true;
+                                            }
+                                        } else {
+                                            // brand  not given by user
+                                            if (brandList.size() > 0 && brandList.contains(brand))
+                                                brandNum++;
                                             num++;
+                                            //storeCounter++;
                                             store = true;
                                             storeOut = true;
+                                            brandList.add(brand);
+                                        }
+                                    }
+                                } else {
+                                    if (brandBool) {
+                                        if (productColor.equalsIgnoreCase(brand)) {
+                                            //color not given by user
+                                            if (colorList.size() > 0 && colorList.contains(color))
+                                                colorNum++;
+                                            num++;
+                                            //storeCounter++;
+                                            store = true;
+                                            storeOut = true;
+                                            colorList.add(color);
                                         }
                                     } else {
-                                        // brand  not given by user
-                                        if (brandList.size() > 0 && brandList.contains(brand))
-                                            brandNum++;
+                                        //only name given by user
+                                        if (colorList.size() > 0) {
+                                            if (colorList.contains(color))
+                                                colorNum++;
+                                            if (brandList.contains(brand))
+                                                brandNum++;
+                                        }
                                         num++;
-                                        store = true;
-                                        storeOut = true;
-                                        brandList.add(brand);
-                                    }
-                                }
-                            } else {
-                                if (brandBool) {
-                                    if (productColor.equalsIgnoreCase(brand)) {
-                                        //color not given by user
-                                        if (colorList.size() > 0 && colorList.contains(color))
-                                            colorNum++;
-                                        num++;
+                                        //storeCounter++;
                                         store = true;
                                         storeOut = true;
                                         colorList.add(color);
+                                        brandList.add(brand);
                                     }
-                                } else {
-                                    //only name given by user
-                                    if (colorList.size() > 0) {
-                                        if (colorList.contains(color))
-                                            colorNum++;
-                                        if (brandList.contains(brand))
-                                            brandNum++;
-                                    }
-                                    num++;
-                                    store = true;
-                                    storeOut = true;
-                                    colorList.add(color);
-                                    brandList.add(brand);
                                 }
                             }
+                            if (store) {
+                                orderEntries.add(entry);
+                                Log.d(TAG, "Adding orderEntry to list of OrderEntries");
+                            /*if (cardinalBool) {
+                                if (storeCounter <= numberValues) {
+                                    orderEntries.add(entry);
+                                    Log.d(TAG, "Adding orderEntry to list of OrderEntries");
+                                }
+                                else
+                                    break;
+                            }
+                            else {
+                                orderEntries.add(entry);
+                                Log.d(TAG, "Adding orderEntry to list of OrderEntries");
+                            }*/
+                            }
                         }
-                        if (store) {
-                            orderEntries.add(entry);
-                            Log.d(TAG, "Adding orderEntry to list of OrderEntries");
+                        if (storeOut) {
+                            orders.add(new OrderList(orderList.get(i).order_number,
+                                    orderList.get(i).order_date, orderEntries));
+                            Log.d(TAG, "Adding list of OrderEntries to list of orderList");
                         }
-                    }
-                    if (storeOut) {
-                        orders.add(new OrderList(orderList.get(i).order_number,
-                                orderList.get(i).order_date, orderEntries));
-                        Log.d(TAG, "Adding list of OrderEntries to list of orderList");
                     }
                 }
                 Log.d(TAG, "value of num is " + num);
@@ -575,8 +663,10 @@ public class VoiceInterface {
                             .overrideNegative(getNegativePrompt(SlangUserConfig.getLocale()));
                 } else {
                     Intent intent = new Intent(appContext, OrderListActivity.class);
-                    intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_PRODUCT);
-                    intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
+                    intent.putExtra(ActivityDetector.ACTIVITY_MODE,
+                            ActivityDetector.MODE_TRACK_PRODUCT);
+                    intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST,
+                            (ArrayList<OrderList>) orders);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     appContext.startActivity(intent);
                 }
@@ -698,9 +788,11 @@ public class VoiceInterface {
                             .overrideNegative(getNegativePrompt(SlangUserConfig.getLocale()));
                 } else {
                     Intent intent = new Intent(activity, OrderListActivity.class);
-                    intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_RETURN_PRODUCT);
+                    intent.putExtra(ActivityDetector.ACTIVITY_MODE,
+                            ActivityDetector.MODE_RETURN_PRODUCT);
                     Log.d(TAG, "Order size is " + orders.size());
-                    intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
+                    intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST,
+                            (ArrayList<OrderList>) orders);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     appContext.startActivity(intent);
                 }
@@ -708,7 +800,8 @@ public class VoiceInterface {
         }
     }
 
-    private static SlangSession.Status refundDefault(SlangResolvedIntent slangResolvedIntent, SlangSession slangSession, String mode) {
+    private static SlangSession.Status refundDefault(SlangResolvedIntent slangResolvedIntent,
+                                                     SlangSession slangSession, String mode) {
         orders = new ArrayList<>();
         int index = -1;
         for (int i = 0; i < orderList.size(); i++) {
@@ -840,8 +933,10 @@ public class VoiceInterface {
                     }
                 } else {
                     Intent intent = new Intent(appContext, OrderListActivity.class);
-                    intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_REFUND_PRODUCT);
-                    intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
+                    intent.putExtra(ActivityDetector.ACTIVITY_MODE,
+                            ActivityDetector.MODE_REFUND_PRODUCT);
+                    intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST,
+                            (ArrayList<OrderList>) orders);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     appContext.startActivity(intent);
                 }
@@ -963,8 +1058,8 @@ public class VoiceInterface {
                     switch (SlangUserConfig.getLocale().getLanguage()) {
                         case "en":
                             slangResolvedIntent.getCompletionStatement()
-                                    .overrideNegative("Sorry, no products eligible for cancellation" +
-                                            " found");
+                                    .overrideNegative("Sorry, no products eligible for " +
+                                            "cancellation found");
                             break;
                         case "hi":
                             slangResolvedIntent.getCompletionStatement()
@@ -973,8 +1068,10 @@ public class VoiceInterface {
                     }
                 } else {
                     Intent intent = new Intent(activity, OrderListActivity.class);
-                    intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_CANCEL_PRODUCT);
-                    intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
+                    intent.putExtra(ActivityDetector.ACTIVITY_MODE,
+                            ActivityDetector.MODE_CANCEL_PRODUCT);
+                    intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST,
+                            (ArrayList<OrderList>) orders);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     appContext.startActivity(intent);
                 }
@@ -1001,7 +1098,8 @@ public class VoiceInterface {
                 );
 
                 boolean process = false;
-                boolean present = sharedPreferences.getBoolean(entry.title + ActivityDetector.PREF_KEY_BOOL, false);
+                boolean present = sharedPreferences.getBoolean(entry.title +
+                        ActivityDetector.PREF_KEY_BOOL, false);
                 if (mode.equals(ActivityDetector.MODE_CANCEL_PRODUCT)) {
                     process = (!entry.returned && !entry.delivered && !entry.cancelled) && !present;
                 }
@@ -1061,12 +1159,20 @@ public class VoiceInterface {
             switch (language) {
                 case "en":
                     if (num > 1)
-                        return "We could not find the exact order you requested. Please select one from the list of orders below.";
+                        if (cardinal)
+                            return "Here are the orders you asked for.";
+                        else
+                            return "We could not find the exact order you requested. Please " +
+                                    "select one from the list of orders shown.";
                     else
                         return "Here is the order you asked for.";
                 case "hi":
                     if (num > 1)
-                        return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक का चयन करें.";
+                        if (cardinal)
+                            return "यह आपके द्वारा मांगे गए आर्डर हैं";
+                        else
+                            return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक " +
+                                    "का चयन करें.";
                     else
                         return "यह रहा आपका आर्डर.";
             }

@@ -42,6 +42,8 @@ public class ActivityDetector {
     public static final String ENTITY_PRODUCT = "product";
     public static final String ENTITY_BRAND = "brand";
     public static final String ENTITY_COLOR = "color";
+    public static final String ENTITY_DATE = "dateOrder";
+    public static final String ENTITY_CARDINAL = "cardinal";
 
     public static final String TAG_ORDER_LIST = "order_list";
     public static final String TAG_ORDER_ENTRY = "order_entry";
