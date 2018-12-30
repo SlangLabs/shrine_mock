@@ -49,6 +49,8 @@ public class ProductGridFragment extends Fragment {
         // Inflate the layout for this fragment with the ProductGrid theme
         View view = inflater.inflate(R.layout.shr_product_grid_fragment, container, false);
 
+        SlangUI.showTrigger();
+
         // Set up the tool bar
         setUpToolbar(view);
 
@@ -93,7 +95,6 @@ public class ProductGridFragment extends Fragment {
         setClickProduct();
 
         Log.d(TAG, "Calling show trigger");
-        SlangUI.showTrigger();
 
         return view;
     }

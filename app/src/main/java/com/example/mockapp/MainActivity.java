@@ -17,7 +17,7 @@ public class MainActivity extends AppCompatActivity implements NavigationHost {
         Intent intent = getIntent();
         boolean back = intent.getBooleanExtra("back", false);
 
-        if (savedInstanceState == null) {
+        /*if (savedInstanceState == null) {
             if (!back) {
                 getSupportFragmentManager()
                         .beginTransaction()
@@ -29,6 +29,12 @@ public class MainActivity extends AppCompatActivity implements NavigationHost {
                         .add(R.id.container, new ProductGridFragment())
                         .commit();
             }
+        }*/
+        if (savedInstanceState == null) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.container, new ProductGridFragment())
+                    .commit();
         }
         SlangUI.showTrigger();
     }
