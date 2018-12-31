@@ -18,10 +18,8 @@ import com.example.mockapp.network.OrderEntry;
 import com.example.mockapp.network.OrderList;
 import com.slanglabs.slang.internal.util.SlangUserConfig;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -127,7 +125,8 @@ public class VoiceInterface {
                                 Log.d(TAG, "Date entity value is " + entity.getValue());
                                 SimpleDateFormat dateFormat =
                                         new SimpleDateFormat("yyyy-MM-dd");
-                                try {
+                                trackProduct(entity.getParent(), true);
+                                /*try {
                                     Date userDate = dateFormat.parse(entity.getValue());
                                     Date date = new Date();
                                     if (date.compareTo(userDate) > 0)
@@ -136,7 +135,7 @@ public class VoiceInterface {
                                         Log.d(TAG, "Case false");
                                 } catch (ParseException e) {
                                     e.printStackTrace();
-                                }
+                                }*/
                                 return session.success();
                             default:
                                 return super.onEntityResolved(entity, session);
@@ -308,6 +307,7 @@ public class VoiceInterface {
                             case ActivityDetector.ENTITY_PRODUCT:
                             case ActivityDetector.ENTITY_COLOR:
                             case ActivityDetector.ENTITY_BRAND:
+                            case ActivityDetector.ENTITY_DATE:
                                 Log.d(TAG, "Entity Product for Return Intent");
                                 returnProduct(entity.getParent(), true);
                                 return session.success();
@@ -412,13 +412,15 @@ public class VoiceInterface {
             num = 0;
             String productName = String.valueOf(slangResolvedIntent
                     .getEntity(ActivityDetector.ENTITY_PRODUCT).getValue());
-            //Log.d(TAG, "Name is " + productName);
             String productColor = String.valueOf(slangResolvedIntent
                     .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
             String productBrand = String.valueOf(slangResolvedIntent
                     .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
+            String dateString = slangResolvedIntent
+                    .getEntity(ActivityDetector.ENTITY_DATE).getValue();
             boolean colorBool = false;
             boolean brandBool = false;
+            boolean dateBool = false;
             colorList = new ArrayList<>();
             colorNum = 0;
             brandList = new ArrayList<>();
@@ -428,6 +430,8 @@ public class VoiceInterface {
                 colorBool = true;
             if (!productBrand.isEmpty())
                 brandBool = true;
+            if (!dateString.isEmpty())
+                dateBool = true;
             for (int i = 0; i < orderList.size(); i++) {
                 list = orderList.get(i).items;
                 List<OrderEntry> orderEntries = new ArrayList<>();
@@ -439,8 +443,13 @@ public class VoiceInterface {
                     String color = entry.color;
                     String brand = entry.brand;
                     if (entry.returned && entry.delivered && !entry.pickup) {
-                        boolean store = false;
 
+                        if(dateBool) {
+                            if (!dateString.equalsIgnoreCase(entry.return_date))
+                                break;
+                        }
+
+                        boolean store = false;
                         if (name.toLowerCase().contains(productName.toLowerCase())) {
                             if (colorBool) {
                                 if (productColor.equalsIgnoreCase(color)) {
@@ -533,6 +542,7 @@ public class VoiceInterface {
                 num = 0;
                 boolean colorBool = false;
                 boolean brandBool = false;
+                boolean dateBool = false;
                 //boolean cardinalBool = false;
                 String productName = String.valueOf(slangResolvedIntent
                         .getEntity(ActivityDetector.ENTITY_PRODUCT).getValue());
@@ -543,8 +553,10 @@ public class VoiceInterface {
                         .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
                 String numberString = slangResolvedIntent
                         .getEntity(ActivityDetector.ENTITY_CARDINAL).getValue();
+                String dateString = slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_DATE).getValue();
                 int numberValues = -1;
-                if (numberString != null) {
+                if (!numberString.isEmpty()) {
                     numberValues = Integer.valueOf(numberString);
                     cardinal = true;
                 }
@@ -555,8 +567,8 @@ public class VoiceInterface {
                 List<OrderEntry> list;
                 //int storeCounter = 0;
 
-                //TODO if cardinalBool is true add top n items to the list and done
                 if (cardinal) {
+                    Log.d(TAG, "Cardinal is true");
                     if (numberValues > orderList.size()) {
                         orders = orderList;
                         num = orderList.size();
@@ -567,10 +579,13 @@ public class VoiceInterface {
                     }
                 }
                 else {
+                    Log.d(TAG, "Cardinal is false");
                     if (!productColor.isEmpty())
                         colorBool = true;
                     if (!productBrand.isEmpty())
                         brandBool = true;
+                    if (!dateString.isEmpty())
+                        dateBool = true;
                     for (int i = 0; i < orderList.size(); i++) {
                         list = orderList.get(i).items;
                         List<OrderEntry> orderEntries = new ArrayList<>();
@@ -581,6 +596,11 @@ public class VoiceInterface {
                             String color = entry.color;
                             String brand = entry.brand;
                             boolean store = false;
+
+                            if(dateBool) {
+                                if (!dateString.equalsIgnoreCase(orderList.get(i).order_date))
+                                    break;
+                            }
 
                             if (name.toLowerCase().contains(productName.toLowerCase())) {
                                 if (colorBool) {
@@ -635,18 +655,6 @@ public class VoiceInterface {
                             if (store) {
                                 orderEntries.add(entry);
                                 Log.d(TAG, "Adding orderEntry to list of OrderEntries");
-                            /*if (cardinalBool) {
-                                if (storeCounter <= numberValues) {
-                                    orderEntries.add(entry);
-                                    Log.d(TAG, "Adding orderEntry to list of OrderEntries");
-                                }
-                                else
-                                    break;
-                            }
-                            else {
-                                orderEntries.add(entry);
-                                Log.d(TAG, "Adding orderEntry to list of OrderEntries");
-                            }*/
                             }
                         }
                         if (storeOut) {
@@ -715,8 +723,11 @@ public class VoiceInterface {
                         .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
                 String productBrand = String.valueOf(slangResolvedIntent
                         .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
+                String dateString = slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_DATE).getValue();
                 boolean colorBool = false;
                 boolean brandBool = false;
+                boolean dateBool = false;
                 colorList = new ArrayList<>();
                 colorNum = 0;
                 brandList = new ArrayList<>();
@@ -726,6 +737,8 @@ public class VoiceInterface {
                     colorBool = true;
                 if (!productBrand.isEmpty())
                     brandBool = true;
+                if (!dateString.isEmpty())
+                    dateBool = true;
                 for (int i = 0; i < orderList.size(); i++) {
                     list = orderList.get(i).items;
                     List<OrderEntry> orderEntries = new ArrayList<>();
@@ -736,6 +749,10 @@ public class VoiceInterface {
                         Log.d(TAG, "Title is " + name);
                         String color = entry.color;
                         String brand = entry.brand;
+                        if(dateBool) {
+                            if (!dateString.equalsIgnoreCase(orderList.get(i).order_date))
+                                break;
+                        }
                         if (!entry.returned && entry.delivered && !entry.cancelled) {
                             boolean store = false;
 
@@ -852,8 +869,11 @@ public class VoiceInterface {
                         .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
                 String productBrand = String.valueOf(slangResolvedIntent
                         .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
+                String dateString = slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_DATE).getValue();
                 boolean colorBool = false;
                 boolean brandBool = false;
+                boolean dateBool = false;
                 colorList = new ArrayList<>();
                 colorNum = 0;
                 brandList = new ArrayList<>();
@@ -863,6 +883,8 @@ public class VoiceInterface {
                     colorBool = true;
                 if (!productBrand.isEmpty())
                     brandBool = true;
+                if (!dateString.isEmpty())
+                    dateBool = true;
                 for (int i = 0; i < orderList.size(); i++) {
                     list = orderList.get(i).items;
                     List<OrderEntry> orderEntries = new ArrayList<>();
@@ -872,8 +894,14 @@ public class VoiceInterface {
                         String name = entry.title;
                         String color = entry.color;
                         String brand = entry.brand;
+
                         if (entry.delivered && entry.returned && entry.pickup) {
                             boolean store = false;
+
+                            if(dateBool) {
+                                if (!(dateString.equalsIgnoreCase(entry.return_date)))
+                                    break;
+                            }
 
                             if (name.toLowerCase().contains(productName.toLowerCase())) {
                                 if (colorBool) {
@@ -986,8 +1014,11 @@ public class VoiceInterface {
                         .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
                 String productBrand = String.valueOf(slangResolvedIntent
                         .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
+                String dateString = slangResolvedIntent
+                        .getEntity(ActivityDetector.ENTITY_DATE).getValue();
                 boolean colorBool = false;
                 boolean brandBool = false;
+                boolean dateBool = false;
                 colorList = new ArrayList<>();
                 colorNum = 0;
                 brandList = new ArrayList<>();
@@ -997,6 +1028,8 @@ public class VoiceInterface {
                     colorBool = true;
                 if (!productBrand.isEmpty())
                     brandBool = true;
+                if (!dateString.isEmpty())
+                    dateBool = true;
                 for (int i = 0; i < orderList.size(); i++) {
                     list = orderList.get(i).items;
                     List<OrderEntry> orderEntries = new ArrayList<>();
@@ -1006,6 +1039,10 @@ public class VoiceInterface {
                         String name = entry.title;
                         String color = entry.color;
                         String brand = entry.brand;
+                        if(dateBool) {
+                            if (!dateString.equalsIgnoreCase(orderList.get(i).order_date))
+                                break;
+                        }
                         if (!entry.returned && !entry.delivered && !entry.cancelled) {
                             boolean store = false;
 

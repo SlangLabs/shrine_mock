@@ -20,12 +20,12 @@
     "price": "₹2299"
   },
   {
-    "title": "Nike Shirt",
+    "title": "Nike T-Shirt",
     "url": "https://kickz.akamaized.net/se/media/images/p/600/nike-W_NSW_SIGNAL_T_Shirt_LOGO-White_Black-1.jpg",
     "price": "₹999"
   },
   {
-    "title": "Sneakers For Men",
+    "title": "Sneaker Shoes For Men",
     "url": "https://assets.adidas.com/images/h_600,f_auto,q_90,fl_lossy/0373d718e0214c509c3ba7fa00ed463f_9366/Superstar_Shoes_White_C77124_05_standard.jpg",
     "price": "₹7999"
   },
@@ -48,6 +48,11 @@
     "title": "Weave keyring",
     "url": "https://storage.googleapis.com/material-vignettes.appspot.com/image/6-0.jpg",
     "price": "₹999"
+  },
+  {
+    "title": "Adidas Men's Round Neck Red T-Shirt",
+    "url": "https://www.atticclothing.com/images/adidas-originals-california-t-shirt-core-red-p19654-41979_image.jpg",
+    "price": "₹2199"
   },
   {
     "title": "Gatsby hat",
@@ -80,6 +85,11 @@
     "price": "₹999"
   },
   {
+    "title": "Levi's Slim Men Blue Jeans",
+    "url": "https://rukminim1.flixcart.com/image/832/832/jean/n/u/3/bmw-darklevis-ben-martin-32-original-imaedpc4zcgjadsv.jpeg?q=70",
+    "price": "₹1799"
+  },
+  {
     "title": "Soothe ceramic set",
     "url": "https://storage.googleapis.com/material-vignettes.appspot.com/image/11-0.jpg",
     "price": "₹1799"
@@ -90,9 +100,24 @@
     "price": "₹2199"
   },
   {
+    "title": "Slim Men's Grey Jeans",
+    "url": "https://rukminim1.flixcart.com/image/880/1056/jlph9jk0/jean/y/a/z/32-pm204291l454blue-pepe-jeans-original-imaf8rychprbfkcr.jpeg",
+    "price": "₹1079"
+  },
+  {
     "title": "Blue stone mug",
     "url": "https://storage.googleapis.com/material-vignettes.appspot.com/image/13-0.jpg",
     "price": "₹1199"
+  },
+  {
+    "title": "Sneakers For Men",
+    "url": "https://assets.adidas.com/images/h_600,f_auto,q_90,fl_lossy/0373d718e0214c509c3ba7fa00ed463f_9366/Superstar_Shoes_White_C77124_05_standard.jpg",
+    "price": "₹7999"
+  },
+  {
+    "title": "ADIDAS Solid Men's Polo Neck Blue T-Shirt",
+    "url": "https://s3.gsxtr.com/i/pr/t-shirt-adidas-originals-original-trefoil-t-shirt-blue-85392-674-1.jpg",
+    "price": "₹2399"
   },
   {
     "title": "Rainwater tray",

@@ -119,7 +119,7 @@
     "items": [
       {
         "item_number": 1,
-        "title": "Sneakers For Men",
+        "title": "Sneaker Shoes For Men",
         "url": "https://assets.adidas.com/images/h_600,f_auto,q_90,fl_lossy/0373d718e0214c509c3ba7fa00ed463f_9366/Superstar_Shoes_White_C77124_05_standard.jpg",
         "price": 7999,
         "brand": "Adidas",
@@ -185,7 +185,7 @@
     "items": [
       {
         "item_number": 1,
-        "title": "Nike Shirt",
+        "title": "Nike T-Shirt",
         "url": "https://kickz.akamaized.net/se/media/images/p/600/nike-W_NSW_SIGNAL_T_Shirt_LOGO-White_Black-1.jpg",
         "price": 999,
         "brand": "Nike",
