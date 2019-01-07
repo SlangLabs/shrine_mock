@@ -549,12 +549,16 @@ public class VoiceInterface {
                 Log.d(TAG, "Name is " + productName);
                 String productColor = String.valueOf(slangResolvedIntent
                         .getEntity(ActivityDetector.ENTITY_COLOR).getValue());
+                Log.d(TAG, "Color is " + productColor);
                 String productBrand = String.valueOf(slangResolvedIntent
                         .getEntity(ActivityDetector.ENTITY_BRAND).getValue());
+                Log.d(TAG, "Brand is " + productBrand);
                 String numberString = slangResolvedIntent
                         .getEntity(ActivityDetector.ENTITY_CARDINAL).getValue();
+                Log.d(TAG, "Cardinal is " + numberString);
                 String dateString = slangResolvedIntent
                         .getEntity(ActivityDetector.ENTITY_DATE).getValue();
+                Log.d(TAG, "Date is " + dateString);
                 int numberValues = -1;
                 if (!numberString.isEmpty()) {
                     numberValues = Integer.valueOf(numberString);
@@ -598,15 +602,19 @@ public class VoiceInterface {
                             boolean store = false;
 
                             if(dateBool) {
+                                Log.d(TAG, "datebool is true");
                                 if (!dateString.equalsIgnoreCase(orderList.get(i).order_date))
                                     break;
                             }
 
                             if (name.toLowerCase().contains(productName.toLowerCase())) {
+                                Log.d(TAG, "Name matches");
                                 if (colorBool) {
                                     if (productColor.equalsIgnoreCase(color)) {
+                                        Log.d(TAG, "Color matches");
                                         if (brandBool) {
-                                            if (productColor.equalsIgnoreCase(brand)) {
+                                            if (productBrand.equalsIgnoreCase(brand)) {
+                                                Log.d(TAG, "Brand matches");
                                                 num++;
                                                 //storeCounter++;
                                                 store = true;
@@ -614,6 +622,7 @@ public class VoiceInterface {
                                             }
                                         } else {
                                             // brand  not given by user
+                                            Log.d(TAG, "Brand not given");
                                             if (brandList.size() > 0 && brandList.contains(brand))
                                                 brandNum++;
                                             num++;
@@ -624,9 +633,11 @@ public class VoiceInterface {
                                         }
                                     }
                                 } else {
+                                    Log.d(TAG, "Color not given");
                                     if (brandBool) {
-                                        if (productColor.equalsIgnoreCase(brand)) {
+                                        if (productBrand.equalsIgnoreCase(brand)) {
                                             //color not given by user
+                                            Log.d(TAG, "Brand matches");
                                             if (colorList.size() > 0 && colorList.contains(color))
                                                 colorNum++;
                                             num++;
@@ -636,6 +647,7 @@ public class VoiceInterface {
                                             colorList.add(color);
                                         }
                                     } else {
+                                        Log.d(TAG, "Only name given");
                                         //only name given by user
                                         if (colorList.size() > 0) {
                                             if (colorList.contains(color))
