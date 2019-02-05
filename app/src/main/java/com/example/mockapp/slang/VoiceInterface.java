@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.widget.Toast;
-
 
 import com.example.mockapp.FeedbackActivity;
 import com.example.mockapp.OrderEntryFragment;
@@ -16,23 +14,19 @@ import com.example.mockapp.OrderListActivity;
 import com.example.mockapp.R;
 import com.example.mockapp.network.OrderEntry;
 import com.example.mockapp.network.OrderList;
-import com.slanglabs.slang.internal.util.SlangUserConfig;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import in.slanglabs.platform.application.ISlangApplicationStateListener;
-import in.slanglabs.platform.application.SlangApplication;
-import in.slanglabs.platform.application.SlangApplicationUninitializedException;
-import in.slanglabs.platform.application.SlangLocaleException;
-import in.slanglabs.platform.application.actions.DefaultResolvedIntentAction;
-import in.slanglabs.platform.session.SlangEntity;
-import in.slanglabs.platform.session.SlangResolvedIntent;
-import in.slanglabs.platform.session.SlangSession;
-import in.slanglabs.platform.ui.SlangScreenContext;
-import in.slanglabs.platform.ui.SlangUI;
+import in.slanglabs.platform.SlangBuddy;
+import in.slanglabs.platform.SlangBuddyOptions;
+import in.slanglabs.platform.SlangEntity;
+import in.slanglabs.platform.SlangIntent;
+import in.slanglabs.platform.SlangLocale;
+import in.slanglabs.platform.SlangSession;
+import in.slanglabs.platform.action.SlangAction;
+import in.slanglabs.platform.action.SlangMultiStepIntentAction;
 
 public class VoiceInterface {
 
@@ -46,8 +40,7 @@ public class VoiceInterface {
     private static boolean current = false;
     private static boolean cardinal = false;
 
-    public static void init(final Application appContext, String appId, String authKey)
-            throws SlangLocaleException {
+    public static void init(final Application appContext, String buddyId, String authKey) {
         VoiceInterface.appContext = appContext;
         orderList = OrderList.initOrderList(appContext.getResources());
         orders = new ArrayList<>();
@@ -58,355 +51,230 @@ public class VoiceInterface {
         editor.clear();
         editor.apply();
 
-        SlangApplication.initialize(appContext, appId, authKey,
-                SlangApplication.getSupportedLocales(), SlangApplication.LOCALE_ENGLISH_IN,
-                new ISlangApplicationStateListener() {
-            @Override
-            public void onInitialized() {
-                try {
-                    registerActions();
-                } catch (SlangApplicationUninitializedException e) {
-                    Toast.makeText(
-                            appContext,
-                            "Slang uninitialized - " + e.getLocalizedMessage(),
-                            Toast.LENGTH_LONG).show();
-                }
-            }
-
-            @Override
-            public void onInitializationFailed(FailureReason failureReason) {
-                Toast.makeText(appContext, "Slang not initialized", Toast.LENGTH_LONG).show();
-                Log.d(TAG, "Failure Reason: " + failureReason);
-            }
-        });
-
+        try {
+            SlangBuddyOptions options = new SlangBuddyOptions.Builder()
+                    .setContext(appContext)
+                    .setBuddyId(buddyId)
+                    .setAPIKey(authKey)
+                    .setListener(new BuddyListener())
+                    .setIntentAction(new V1Action())
+                    .setRequestedLocales(SlangLocale.getSupportedLocales())
+                    .setDefaultLocale(SlangLocale.LOCALE_ENGLISH_IN)
+                    .build();
+            SlangBuddy.initialize(options);
+        } catch (SlangBuddyOptions.InvalidOptionException e) {
+            e.printStackTrace();
+        } catch (SlangBuddy.InsufficientPrivilegeException e) {
+            e.printStackTrace();
+        }
     }
 
-    private static void registerActions() throws SlangApplicationUninitializedException {
+    private static class V1Action implements SlangMultiStepIntentAction {
 
-        //TODO figure out not starting new activities, just keep replacing fragments
+        @Override
+        public void onIntentResolutionBegin(SlangIntent slangIntent, SlangSession slangSession) {
+            switch(slangIntent.getName()) {
+                case ActivityDetector.INTENT_TRACK_PRODUCT:
+                    orders.clear();
+                    flag = true;
+                    break;
+                case ActivityDetector.INTENT_TRACK_REFUND_PRODUCT:
+                    flag = true;
+                    break;
+                case ActivityDetector.INTENT_RETURN_PRODUCT:
+                    orders.clear();
+                    flag = true;
+                    current = false;
+                    break;
+                case ActivityDetector.INTENT_CANCEL_PRODUCT:
+                    orders.clear();
+                    flag = true;
+                    current = false;
+                    break;
+            }
+        }
 
-        SlangUI.setTriggerImageResource(R.drawable.customer_support2);
-        SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_DEFAULT)
-                .setResolutionAction(new DefaultResolvedIntentAction() {
-                    @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
-                                                      SlangSession slangSession) {
-                        Log.d(TAG, "Slang Triggering Default Track Intent");
-                        return trackDefault(slangSession, ActivityDetector.MODE_TRACK_DEFAULT);
+        @Override
+        public Status onEntityUnresolved(SlangEntity slangEntity, SlangSession slangSession) {
+            return null;
+        }
+
+        @Override
+        public Status onEntityResolved(SlangEntity slangEntity, SlangSession slangSession) {
+            switch (slangEntity.getIntent().getName()) {
+                case ActivityDetector.INTENT_TRACK_PRODUCT:
+                    switch (slangEntity.getName()) {
+                        case ActivityDetector.ENTITY_PRODUCT:
+                        case ActivityDetector.ENTITY_COLOR:
+                        case ActivityDetector.ENTITY_BRAND:
+                        case ActivityDetector.ENTITY_CARDINAL:
+                            Log.d(TAG, "Entity resolved");
+                            if (slangEntity.getName().equals(ActivityDetector.ENTITY_CARDINAL))
+                                Log.d(TAG, "Cardinal value is " + slangEntity.getValue());
+                            trackProduct(slangEntity.getIntent(), slangSession, true);
                     }
-                });
-
-        SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_PRODUCT)
-                .setResolutionAction(new DefaultResolvedIntentAction() {
-                    @Override
-                    public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent,
-                                                                       SlangSession session) {
-                        orders.clear();
-                        flag = true;
-                        return super.onIntentResolutionBegin(intent, session);
+                    return Status.SUCCESS;
+                case ActivityDetector.INTENT_TRACK_REFUND_PRODUCT:
+                    switch (slangEntity.getName()) {
+                        case ActivityDetector.ENTITY_PRODUCT:
+                        case ActivityDetector.ENTITY_COLOR:
+                        case ActivityDetector.ENTITY_BRAND:
+                            Log.d(TAG, "Entity Resolve for Refund Intent");
+                            refundProduct(slangEntity.getIntent(), slangSession, true);
+                            return Status.SUCCESS;
                     }
-
-                    @Override
-                    public SlangSession.Status onEntityResolved(SlangEntity entity,
-                                                                SlangSession session) {
-                        Log.d(TAG, "Calling onEntityResolved");
-                        switch (entity.getName()) {
-                            case ActivityDetector.ENTITY_PRODUCT:
-                            case ActivityDetector.ENTITY_COLOR:
-                            case ActivityDetector.ENTITY_BRAND:
-                            case ActivityDetector.ENTITY_CARDINAL:
-                                Log.d(TAG, "Entity resolved");
-                                if (entity.getName().equals(ActivityDetector.ENTITY_CARDINAL))
-                                    Log.d(TAG, "Cardinal value is " + entity.getValue());
-                                trackProduct(entity.getParent(), true);
-                                return session.success();
-                            case ActivityDetector.ENTITY_DATE:
-                                Log.d(TAG, "Date entity value is " + entity.getValue());
-                                SimpleDateFormat dateFormat =
-                                        new SimpleDateFormat("yyyy-MM-dd");
-                                trackProduct(entity.getParent(), true);
-                                /*try {
-                                    Date userDate = dateFormat.parse(entity.getValue());
-                                    Date date = new Date();
-                                    if (date.compareTo(userDate) > 0)
-                                        Log.d(TAG, "Case true");
-                                    else
-                                        Log.d(TAG, "Case false");
-                                } catch (ParseException e) {
-                                    e.printStackTrace();
-                                }*/
-                                return session.success();
-                            default:
-                                return super.onEntityResolved(entity, session);
-                        }
+                case ActivityDetector.INTENT_RETURN_PRODUCT:
+                    switch (slangEntity.getName()) {
+                        case ActivityDetector.ENTITY_PRODUCT:
+                        case ActivityDetector.ENTITY_COLOR:
+                        case ActivityDetector.ENTITY_BRAND:
+                        case ActivityDetector.ENTITY_DATE:
+                            Log.d(TAG, "Entity Product for Return Intent");
+                            returnProduct(slangEntity.getIntent(), slangSession, true);
+                            return Status.SUCCESS;
                     }
-
-                    @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
-                                                      SlangSession slangSession) {
-                        Log.d(TAG, "Slang Triggering Product Track Intent");
-                        flag = true;
-                        trackProduct(slangResolvedIntent, false);
-                        if (num > 0) {
-                            slangResolvedIntent.getCompletionStatement()
-                                    .overrideAffirmative(getCompletionPrompt(
-                                                    SlangUserConfig.getLocale(),
-                                                    ActivityDetector.MODE_TRACK_PRODUCT));
-                            return slangSession.success();
-                        }
-                        else {
-                            return slangSession.failure();
-                        }
+                case ActivityDetector.INTENT_CANCEL_PRODUCT:
+                    Log.d(TAG, "Entity Resolved for Cancel Intent");
+                    switch (slangEntity.getName()) {
+                        case ActivityDetector.ENTITY_PRODUCT:
+                        case ActivityDetector.ENTITY_COLOR:
+                        case ActivityDetector.ENTITY_BRAND:
+                            cancelOrder(slangEntity.getIntent(), slangSession, true);
+                            return Status.SUCCESS;
                     }
-                });
+            }
+            return null;
+        }
 
-        SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_ALL)
-                .setResolutionAction(new DefaultResolvedIntentAction() {
-                    @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
-                                                      SlangSession slangSession) {
-                        Log.d(TAG, "Slang Triggering All Track Intent");
-                        return trackDefault(slangSession, ActivityDetector.MODE_TRACK_ALL);
+        @Override
+        public void onIntentResolutionEnd(SlangIntent slangIntent, SlangSession slangSession) {
+        }
+
+        @Override
+        public Status action(SlangIntent slangIntent, SlangSession slangSession) {
+            switch (slangIntent.getName()) {
+                case ActivityDetector.INTENT_TRACK_DEFAULT:
+                    Log.d(TAG, "Slang Triggering Default Track Intent");
+                    return trackDefault(ActivityDetector.MODE_TRACK_DEFAULT);
+                case ActivityDetector.INTENT_TRACK_PRODUCT:
+                    Log.d(TAG, "Slang Triggering Product Track Intent");
+                    flag = true;
+                    trackProduct(slangIntent, slangSession, false);
+                    if (num > 0) {
+                        slangIntent.getCompletionStatement()
+                                .overrideAffirmative(getCompletionPrompt(
+                                        slangSession.getCurrentLocale(),
+                                        ActivityDetector.MODE_TRACK_PRODUCT));
+                        return Status.SUCCESS;
+                    } else {
+                        return Status.FAILURE;
                     }
-                });
-
-        SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_REFUND_DEFAULT)
-                .setResolutionAction(new DefaultResolvedIntentAction() {
-                    @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
-                                                      SlangSession slangSession) {
-                        Log.d(TAG, "Slang Triggering Default Refund Intent");
-                        return refundDefault(slangResolvedIntent, slangSession,
-                                ActivityDetector.MODE_REFUND_DEFAULT);
+                case ActivityDetector.INTENT_TRACK_ALL:
+                    Log.d(TAG, "Slang Triggering All Track Intent");
+                    return trackDefault(ActivityDetector.MODE_TRACK_ALL);
+                case ActivityDetector.INTENT_TRACK_REFUND_DEFAULT:
+                    Log.d(TAG, "Slang Triggering Default Refund Intent");
+                    return refundDefault(slangIntent, slangSession,
+                            ActivityDetector.MODE_REFUND_DEFAULT);
+                case ActivityDetector.INTENT_TRACK_REFUND_PRODUCT:
+                    Log.d(TAG, "Slang Triggering Product Refund Intent");
+                    flag = true;
+                    refundProduct(slangIntent, slangSession, false);
+                    if (num > 0) {
+                        slangIntent.getCompletionStatement()
+                                .overrideAffirmative(getCompletionPrompt(
+                                        slangSession.getCurrentLocale(),
+                                        ActivityDetector.MODE_REFUND_PRODUCT)
+                                );
+                        return Status.SUCCESS;
                     }
-                });
-
-        SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_REFUND_PRODUCT)
-                .setResolutionAction(new DefaultResolvedIntentAction() {
-                    @Override
-                    public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent,
-                                                                       SlangSession session) {
-                        flag = true;
-                        return super.onIntentResolutionBegin(intent, session);
+                    else {
+                        return Status.FAILURE;
                     }
-
-                    @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
-                                                      SlangSession slangSession) {
-                        Log.d(TAG, "Slang Triggering Product Refund Intent");
-                        flag = true;
-                        refundProduct(slangResolvedIntent, false);
-                        if (num > 0) {
-                            slangResolvedIntent.getCompletionStatement()
-                                    .overrideAffirmative(getCompletionPrompt(
-                                            SlangUserConfig.getLocale(),
-                                            ActivityDetector.MODE_REFUND_PRODUCT)
-                                    );
-                            return slangSession.success();
-                        }
-                        else {
-                            return slangSession.failure();
-                        }
+                case ActivityDetector.INTENT_TRACK_RETURN:
+                    trackReturn(slangIntent, slangSession, true);
+                    trackReturn(slangIntent, slangSession, false);
+                    Log.d(TAG, "Slang Triggering Track Return Intent");
+                    if (num > 0) {
+                        slangIntent.getCompletionStatement()
+                                .overrideAffirmative(
+                                        getCompletionPrompt(
+                                                slangSession.getCurrentLocale(),
+                                                ActivityDetector.MODE_TRACK_RETURN
+                                        )
+                                );
+                        return Status.SUCCESS;
                     }
-
-                    @Override
-                    public SlangSession.Status onEntityResolved(SlangEntity entity,
-                                                                SlangSession session) {
-                        switch (entity.getName()) {
-                            case ActivityDetector.ENTITY_PRODUCT:
-                            case ActivityDetector.ENTITY_COLOR:
-                            case ActivityDetector.ENTITY_BRAND:
-                                Log.d(TAG, "Entity Resolve for Refund Intent");
-                                refundProduct(entity.getParent(), true);
-                                return session.success();
-                            default:
-                                return super.onEntityResolved(entity, session);
-                        }
+                    else {
+                        return Status.FAILURE;
                     }
-                });
-
-        SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_TRACK_RETURN)
-                .setResolutionAction(new DefaultResolvedIntentAction() {
-                    @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
-                                                      SlangSession slangSession) {
-                        trackReturn(slangResolvedIntent, true);
-                        trackReturn(slangResolvedIntent, false);
-                        Log.d(TAG, "Slang Triggering Track Return Intent");
-                        if (num > 0) {
-                            slangResolvedIntent.getCompletionStatement()
-                                    .overrideAffirmative(
-                                            getCompletionPrompt(
-                                                    SlangUserConfig.getLocale(),
-                                                    ActivityDetector.MODE_TRACK_RETURN
-                                            )
-                                    );
-                            return slangSession.success();
-                        }
-                        else {
-                            return slangSession.failure();
-                        }
+                case ActivityDetector.INTENT_RETURN_DEFAULT:
+                    Log.d(TAG, "Slang Triggering Default Return Intent");
+                    return returnDefault(ActivityDetector.MODE_RETURN_DEFAULT);
+                case ActivityDetector.INTENT_RETURN_PRODUCT:
+                    if(flag) {
+                        resolveCurrent(slangIntent, slangSession,
+                                ActivityDetector.MODE_RETURN_PRODUCT);
+                        if (!current)
+                            returnProduct(slangIntent, slangSession, true);
                     }
-                });
-
-        SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_RETURN_DEFAULT)
-                .setResolutionAction(new DefaultResolvedIntentAction() {
-                    @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
-                                                      SlangSession slangSession) {
-                        Log.d(TAG, "Slang Triggering Default Return Intent");
-                        return returnDefault(slangSession, ActivityDetector.MODE_RETURN_DEFAULT);
+                    flag = true;
+                    if (!current) {
+                        returnProduct(slangIntent, slangSession, false);
                     }
-                });
-
-        SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_RETURN_PRODUCT)
-                .setResolutionAction(new DefaultResolvedIntentAction() {
-
-                    @Override
-                    public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent,
-                                                                       SlangSession session) {
-                        orders.clear();
-                        flag = true;
-                        current = false;
-                        return super.onIntentResolutionBegin(intent, session);
+                    if (num > 0) {
+                        slangIntent.getCompletionStatement()
+                                .overrideAffirmative(
+                                        getCompletionPrompt(
+                                                slangSession.getCurrentLocale(),
+                                                ActivityDetector.MODE_RETURN_PRODUCT
+                                        )
+                                );
+                        return Status.SUCCESS;
                     }
-
-                    @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
-                                                      SlangSession slangSession) {
-                        if(flag) {
-                            resolveCurrent(slangResolvedIntent,
-                                    ActivityDetector.MODE_RETURN_PRODUCT);
-                            if (!current)
-                                returnProduct(slangResolvedIntent, true);
-                        }
-                        flag = true;
-                        if (!current) {
-                            returnProduct(slangResolvedIntent, false);
-                        }
-                        if (num > 0) {
-                            slangResolvedIntent.getCompletionStatement()
-                                    .overrideAffirmative(
-                                            getCompletionPrompt(
-                                                    SlangUserConfig.getLocale(),
-                                                    ActivityDetector.MODE_RETURN_PRODUCT
-                                            )
-                                    );
-                            return slangSession.success();
-                        }
-                        else {
-                            return slangSession.failure();
-                        }
+                    else {
+                        return Status.FAILURE;
                     }
-
-                    @Override
-                    public SlangSession.Status onEntityResolved(SlangEntity entity,
-                                                                SlangSession session) {
-                        switch (entity.getName()) {
-                            case ActivityDetector.ENTITY_PRODUCT:
-                            case ActivityDetector.ENTITY_COLOR:
-                            case ActivityDetector.ENTITY_BRAND:
-                            case ActivityDetector.ENTITY_DATE:
-                                Log.d(TAG, "Entity Product for Return Intent");
-                                returnProduct(entity.getParent(), true);
-                                return session.success();
-                            default:
-                                return super.onEntityResolved(entity, session);
-                        }
+                case ActivityDetector.INTENT_CANCEL_DEFAULT:
+                    Log.d(TAG, "Slang Triggering Default Cancel Intent");
+                    return cancelDefault(ActivityDetector.MODE_RETURN_DEFAULT);
+                case ActivityDetector.INTENT_CANCEL_PRODUCT:
+                    if(flag) {
+                        resolveCurrent(slangIntent, slangSession,
+                                ActivityDetector.MODE_CANCEL_PRODUCT);
+                        Log.d(TAG, "Inside if flag Current is " + current);
+                        if (!current)
+                            cancelOrder(slangIntent, slangSession, true);
                     }
-                });
-
-        SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_CANCEL_DEFAULT)
-                .setResolutionAction(new DefaultResolvedIntentAction() {
-                    @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
-                                                      SlangSession slangSession) {
-                        Log.d(TAG, "Slang Triggering Default Cancel Intent");
-                        return cancelDefault(slangSession, ActivityDetector.MODE_RETURN_DEFAULT);
+                    flag = true;
+                    Log.d(TAG, "Outside if flag Current is " + current);
+                    if (!current) {
+                        cancelOrder(slangIntent, slangSession, false);
                     }
-                });
-
-        SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_CANCEL_PRODUCT)
-                .setResolutionAction(new DefaultResolvedIntentAction() {
-
-                    @Override
-                    public SlangSession.Status onIntentResolutionBegin(SlangResolvedIntent intent,
-                                                                       SlangSession session) {
-                        orders.clear();
-                        flag = true;
-                        current = false;
-                        return super.onIntentResolutionBegin(intent, session);
+                    if (num > 0) {
+                        slangIntent.getCompletionStatement()
+                                .overrideAffirmative(
+                                        getCompletionPrompt(
+                                                slangSession.getCurrentLocale(),
+                                                ActivityDetector.MODE_CANCEL_PRODUCT
+                                        )
+                                );
+                        return Status.SUCCESS;
                     }
-
-                    @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
-                                                      SlangSession slangSession) {
-                        if(flag) {
-                            resolveCurrent(slangResolvedIntent,
-                                    ActivityDetector.MODE_CANCEL_PRODUCT);
-                            Log.d(TAG, "Inside if flag Current is " + current);
-                            if (!current)
-                                cancelOrder(slangResolvedIntent, true);
-                        }
-                        flag = true;
-                        Log.d(TAG, "Outside if flag Current is " + current);
-                        if (!current) {
-                            cancelOrder(slangResolvedIntent, false);
-                        }
-                        if (num > 0) {
-                            slangResolvedIntent.getCompletionStatement()
-                                    .overrideAffirmative(
-                                            getCompletionPrompt(
-                                                    SlangUserConfig.getLocale(),
-                                                    ActivityDetector.MODE_CANCEL_PRODUCT
-                                            )
-                                    );
-                            return slangSession.success();
-                        }
-                        else {
-                            return slangSession.failure();
-                        }
+                    else {
+                        return Status.FAILURE;
                     }
-
-                    @Override
-                    public SlangSession.Status onEntityResolved(SlangEntity entity,
-                                                                SlangSession session) {
-                        Log.d(TAG, "Entity Resolved for Cancel Intent");
-                        switch (entity.getName()) {
-                            case ActivityDetector.ENTITY_PRODUCT:
-                            case ActivityDetector.ENTITY_COLOR:
-                            case ActivityDetector.ENTITY_BRAND:
-                                cancelOrder(entity.getParent(), true);
-                                return session.success();
-                            default:
-                                return super.onEntityResolved(entity, session);
-                        }
-                    }
-                });
-
-        SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_CONTACT_SUPPORT)
-                .setResolutionAction(new DefaultResolvedIntentAction() {
-                    @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
-                                                      SlangSession slangSession) {
-                        appContext.startActivity(new Intent(appContext, FeedbackActivity.class));
-                        return slangSession.success();
-                    }
-                });
-
-        SlangApplication.getIntentDescriptor(ActivityDetector.INTENT_NO_VOICE)
-                .setResolutionAction(new DefaultResolvedIntentAction() {
-                    @Override
-                    public SlangSession.Status action(SlangResolvedIntent slangResolvedIntent,
-                                                      SlangSession slangSession) {
-                        return slangSession.success();
-                    }
-                });
+                case ActivityDetector.INTENT_CONTACT_SUPPORT:
+                    appContext.startActivity(new Intent(appContext, FeedbackActivity.class));
+                    return Status.SUCCESS;
+                case ActivityDetector.INTENT_NO_VOICE:
+                    return Status.SUCCESS;
+            }
+            return null;
+        }
     }
 
-    private static void trackReturn(SlangResolvedIntent slangResolvedIntent, boolean process) {
-        Activity activity = SlangScreenContext.getInstance().getCurrentActivity();
+    private static void trackReturn(SlangIntent slangResolvedIntent, SlangSession slangSession, boolean process) {
         if(process) {
             orders.clear();
             num = 0;
@@ -495,7 +363,7 @@ public class VoiceInterface {
             }
         } else {
             if (num == 0) {
-                switch (SlangUserConfig.getLocale().getLanguage()) {
+                switch (slangSession.getCurrentLocale().getLanguage()) {
                     case "en":
                     slangResolvedIntent.getCompletionStatement()
                             .overrideNegative("Sorry, no matching products found. Try returning " +
@@ -513,7 +381,7 @@ public class VoiceInterface {
                 }
             }
             else {
-                Intent intent = new Intent(activity, OrderListActivity.class);
+                Intent intent = new Intent(appContext, OrderListActivity.class);
                 intent.putExtra(ActivityDetector.ACTIVITY_MODE, ActivityDetector.MODE_TRACK_RETURN);
                 Log.d(TAG, "Order size is " + orders.size());
                 intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST,
@@ -524,17 +392,17 @@ public class VoiceInterface {
         }
     }
 
-    private static SlangSession.Status trackDefault(SlangSession slangSession, String mode) {
-        //final Activity activity = SlangScreenContext.getInstance().getCurrentActivity();
+    private static SlangAction.Status trackDefault(String mode) {
         Intent i = new Intent(appContext, OrderListActivity.class);
         i.putExtra(ActivityDetector.ACTIVITY_MODE, mode);
         i.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orderList);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         appContext.startActivity(i);
-        return slangSession.success();
+        return SlangAction.Status.SUCCESS;
     }
 
-    private static void trackProduct(final SlangResolvedIntent slangResolvedIntent,
+    private static void trackProduct(final SlangIntent slangResolvedIntent,
+                                     SlangSession slangSession,
                                      boolean process) {
         if (flag) {
             if (process) {
@@ -680,7 +548,7 @@ public class VoiceInterface {
             } else {
                 if (num == 0) {
                     slangResolvedIntent.getCompletionStatement()
-                            .overrideNegative(getNegativePrompt(SlangUserConfig.getLocale()));
+                            .overrideNegative(getNegativePrompt(slangSession.getCurrentLocale()));
                 } else {
                     Intent intent = new Intent(appContext, OrderListActivity.class);
                     intent.putExtra(ActivityDetector.ACTIVITY_MODE,
@@ -694,7 +562,7 @@ public class VoiceInterface {
         }
     }
 
-    private static SlangSession.Status returnDefault(SlangSession slangSession, String mode) {
+    private static SlangAction.Status returnDefault(String mode) {
         orders = new ArrayList<>();
         int index = -1;
         for (int i = 0; i < orderList.size(); i++) {
@@ -719,12 +587,14 @@ public class VoiceInterface {
         i.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         appContext.startActivity(i);
-        return slangSession.success();
+        return SlangAction.Status.SUCCESS;
     }
 
-    private static void returnProduct(SlangResolvedIntent slangResolvedIntent, boolean process) {
+    private static void returnProduct(SlangIntent slangResolvedIntent,
+                                      SlangSession slangSession,
+                                      boolean process) {
         if (flag) {
-            Activity activity = SlangScreenContext.getInstance().getCurrentActivity();
+            //Activity activity = SlangScreenContext.getInstance().getCurrentActivity();
             if (process) {
                 flag = false;
                 num = 0;
@@ -814,9 +684,9 @@ public class VoiceInterface {
             } else {
                 if (num == 0) {
                     slangResolvedIntent.getCompletionStatement()
-                            .overrideNegative(getNegativePrompt(SlangUserConfig.getLocale()));
+                            .overrideNegative(getNegativePrompt(slangSession.getCurrentLocale()));
                 } else {
-                    Intent intent = new Intent(activity, OrderListActivity.class);
+                    Intent intent = new Intent(appContext, OrderListActivity.class);
                     intent.putExtra(ActivityDetector.ACTIVITY_MODE,
                             ActivityDetector.MODE_RETURN_PRODUCT);
                     Log.d(TAG, "Order size is " + orders.size());
@@ -829,7 +699,7 @@ public class VoiceInterface {
         }
     }
 
-    private static SlangSession.Status refundDefault(SlangResolvedIntent slangResolvedIntent,
+    private static SlangAction.Status refundDefault(SlangIntent slangResolvedIntent,
                                                      SlangSession slangSession, String mode) {
         orders = new ArrayList<>();
         int index = -1;
@@ -858,17 +728,17 @@ public class VoiceInterface {
         appContext.startActivity(i);
         if (index > 0) {
             slangResolvedIntent.getCompletionStatement()
-                    .overrideAffirmative(getCompletionPrompt(SlangUserConfig.getLocale(), mode));
-            return slangSession.success();
+                    .overrideAffirmative(getCompletionPrompt(slangSession.getCurrentLocale(), mode));
+            return SlangAction.Status.SUCCESS;
         }
         else {
             slangResolvedIntent.getCompletionStatement()
-                    .overrideNegative(getNegativePrompt(SlangUserConfig.getLocale()));
-            return slangSession.failure();
+                    .overrideNegative(getNegativePrompt(slangSession.getCurrentLocale()));
+            return SlangAction.Status.FAILURE;
         }
     }
 
-    private static void refundProduct(SlangResolvedIntent slangResolvedIntent, boolean process) {
+    private static void refundProduct(SlangIntent slangResolvedIntent, SlangSession slangSession, boolean process) {
         if(flag) {
             if (process) {
                 flag = false;
@@ -960,7 +830,7 @@ public class VoiceInterface {
                 }
             } else {
                 if (num == 0) {
-                    switch (SlangUserConfig.getLocale().getLanguage()) {
+                    switch (slangSession.getCurrentLocale().getLanguage()) {
                         case "en":
                             slangResolvedIntent.getCompletionStatement()
                                     .overrideNegative("Sorry, no pending refunds matching your " +
@@ -984,7 +854,7 @@ public class VoiceInterface {
         }
     }
 
-    private static SlangSession.Status cancelDefault(SlangSession slangSession, String mode) {
+    private static SlangAction.Status cancelDefault(String mode) {
         orders = new ArrayList<>();
         int index = -1;
         for (int i = 0; i < orderList.size(); i++) {
@@ -1010,12 +880,11 @@ public class VoiceInterface {
         i.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST, (ArrayList<OrderList>) orders);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         appContext.startActivity(i);
-        return slangSession.success();
+        return SlangAction.Status.SUCCESS;
     }
 
-    private static void cancelOrder(SlangResolvedIntent slangResolvedIntent, boolean process) {
+    private static void cancelOrder(SlangIntent slangResolvedIntent, SlangSession slangSession, boolean process) {
         if (flag) {
-            final Activity activity = SlangScreenContext.getInstance().getCurrentActivity();
             if (process) {
                 flag = false;
                 num = 0;
@@ -1104,7 +973,7 @@ public class VoiceInterface {
                 }
             } else {
                 if (num == 0) {
-                    switch (SlangUserConfig.getLocale().getLanguage()) {
+                    switch (slangSession.getCurrentLocale().getLanguage()) {
                         case "en":
                             slangResolvedIntent.getCompletionStatement()
                                     .overrideNegative("Sorry, no products eligible for " +
@@ -1116,7 +985,7 @@ public class VoiceInterface {
 
                     }
                 } else {
-                    Intent intent = new Intent(activity, OrderListActivity.class);
+                    Intent intent = new Intent(appContext, OrderListActivity.class);
                     intent.putExtra(ActivityDetector.ACTIVITY_MODE,
                             ActivityDetector.MODE_CANCEL_PRODUCT);
                     intent.putParcelableArrayListExtra(ActivityDetector.ORDER_LIST,
@@ -1128,8 +997,8 @@ public class VoiceInterface {
         }
     }
 
-    private static void resolveCurrent(SlangResolvedIntent slangResolvedIntent, String mode) {
-        final Activity activity = SlangScreenContext.getInstance().getCurrentActivity();
+    private static void resolveCurrent(SlangIntent slangResolvedIntent, SlangSession slangSession, String mode) {
+        final Activity activity = slangSession.getCurrentActivity();
         if (activity instanceof OrderListActivity) {
             final Fragment currentFragment = ((OrderListActivity) activity)
                     .getSupportFragmentManager()
@@ -1170,7 +1039,7 @@ public class VoiceInterface {
                 else {
                     num = 0;
                     if (mode.equals(ActivityDetector.MODE_CANCEL_PRODUCT)) {
-                        switch (SlangUserConfig.getLocale().getLanguage()) {
+                        switch (slangSession.getCurrentLocale().getLanguage()) {
                             case "en":
                                 slangResolvedIntent.getCompletionStatement()
                                         .overrideNegative("Sorry, this order cannot be cancelled.");
@@ -1182,7 +1051,7 @@ public class VoiceInterface {
                         }
                     }
                     else if (mode.equals(ActivityDetector.MODE_RETURN_PRODUCT)) {
-                        switch (SlangUserConfig.getLocale().getLanguage()) {
+                        switch (slangSession.getCurrentLocale().getLanguage()) {
                             case "en":
                                 slangResolvedIntent.getCompletionStatement()
                                         .overrideNegative("Sorry, this order cannot be returned.");
@@ -1195,7 +1064,7 @@ public class VoiceInterface {
                     }
                 }
             }
-            else if (currentFragment.getTag().equals(ActivityDetector.TAG_ORDER_ENTRY)) { ;
+            else if (!currentFragment.getTag().equals(ActivityDetector.TAG_ORDER_ENTRY)) { ;
                 Log.d(TAG, "CANNOT BE RESOLVED");
                 current = false;
             }
@@ -1204,99 +1073,101 @@ public class VoiceInterface {
 
     private static String getCompletionPrompt(Locale locale, String mode) {
         String language = locale.getLanguage();
-        if (mode.equals(ActivityDetector.MODE_TRACK_PRODUCT)) {
-            switch (language) {
-                case "en":
-                    if (num > 1)
-                        if (cardinal)
-                            return "Here are the orders you asked for.";
+        switch (mode) {
+            case ActivityDetector.MODE_TRACK_PRODUCT:
+                switch (language) {
+                    case "en":
+                        if (num > 1)
+                            if (cardinal)
+                                return "Here are the orders you asked for.";
+                            else
+                                return "We could not find the exact order you requested. Please " +
+                                        "select one from the list of orders shown.";
                         else
-                            return "We could not find the exact order you requested. Please " +
-                                    "select one from the list of orders shown.";
-                    else
-                        return "Here is the order you asked for.";
-                case "hi":
-                    if (num > 1)
-                        if (cardinal)
-                            return "यह आपके द्वारा मांगे गए आर्डर हैं";
+                            return "Here is the order you asked for.";
+                    case "hi":
+                        if (num > 1)
+                            if (cardinal)
+                                return "यह आपके द्वारा मांगे गए आर्डर हैं";
+                            else
+                                return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक " +
+                                        "का चयन करें.";
                         else
-                            return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक " +
-                                    "का चयन करें.";
-                    else
-                        return "यह रहा आपका आर्डर.";
-            }
-        }
-        else if (mode.equals(ActivityDetector.MODE_REFUND_DEFAULT)) {
-            switch (language) {
-                case "en":
-                    return "The refund status is " + orders.get(0).items.get(0).status + ".";
-                case "hi":
-                    return "आपका रिफंड स्टेटस यह है " + orders.get(0).items.get(0).status + ".";
-            }
-        }
-        else if (mode.equals(ActivityDetector.MODE_REFUND_PRODUCT)) {
-            switch (language) {
-                case "en":
-                    if (num > 1)
-                        return "We could not find the exact order you requested. " +
-                                "Please choose the order you want to check the refund status for.";
-                    else
-                        return "The refund status is " + orders.get(0).items.get(0).status;
-                case "hi":
-                    if (num > 1)
-                        return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक का " +
-                                "चयन करें किसके लिए आप धनवापसी की स्थिति जांचना चाहते हैं.";
-                    else
+                            return "यह रहा आपका आर्डर.";
+                }
+                break;
+            case ActivityDetector.MODE_REFUND_DEFAULT:
+                switch (language) {
+                    case "en":
+                        return "The refund status is " + orders.get(0).items.get(0).status + ".";
+                    case "hi":
                         return "आपका रिफंड स्टेटस यह है " + orders.get(0).items.get(0).status + ".";
-            }
-        }
-        else if (mode.equals(ActivityDetector.MODE_TRACK_RETURN)) {
-            switch (language) {
-                case "en":
-                    if (num > 1)
-                        return "We could not find the exact order you requested. " +
-                                "Choose among the returns you wish to track.";
-                    else
-                        return "Your order will be pickup up on the specified pick-up date.";
-                case "hi":
-                    if (num > 1)
-                        return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक का " +
-                                "चयन करें किस आर्डर वापसी के लिए आप स्थिति जांचना चाहते हैं.";
-                    else
-                        return "आपका ऑर्डर निर्दिष्ट पिक-अप तिथि पर उठाया जाएगा.";
-            }
-        }
-        else if (mode.equals(ActivityDetector.MODE_RETURN_PRODUCT)) {
-            switch (language) {
-                case "en":
-                    if (num > 1)
-                        return "We could not find the exact order you requested. Choose among " +
-                                "the products you wish to return.";
-                    else
-                        return "Please confirm you wish to return this order.";
-                case "hi":
-                    if (num > 1)
-                        return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक का " +
-                                "चयन करें.";
-                    else
-                        return "कृपया पुष्टि करें कि आप इस आर्डर को वापस करना चाहते हैं";
-            }
-        }
-        else if (mode.equals(ActivityDetector.MODE_CANCEL_PRODUCT)) {
-            switch (language) {
-                case "en":
-                    if (num > 1)
-                        return "We could not find the exact order you requested. Choose among" +
-                                " the products you wish to cancel.";
-                    else
-                        return "Please confirm you wish to cancel this order.";
-                case "hi":
-                    if (num > 1)
-                        return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक का " +
-                                "चयन करें.";
-                    else
-                        return "कृपया पुष्टि करें कि आप इस आर्डर को रद्द करना चाहते हैं";
-            }
+                }
+                break;
+            case ActivityDetector.MODE_REFUND_PRODUCT:
+                switch (language) {
+                    case "en":
+                        if (num > 1)
+                            return "We could not find the exact order you requested. " +
+                                    "Please choose the order you want to check the refund status for.";
+                        else
+                            return "The refund status is " + orders.get(0).items.get(0).status;
+                    case "hi":
+                        if (num > 1)
+                            return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक का " +
+                                    "चयन करें किसके लिए आप धनवापसी की स्थिति जांचना चाहते हैं.";
+                        else
+                            return "आपका रिफंड स्टेटस यह है " + orders.get(0).items.get(0).status + ".";
+                }
+                break;
+            case ActivityDetector.MODE_TRACK_RETURN:
+                switch (language) {
+                    case "en":
+                        if (num > 1)
+                            return "We could not find the exact order you requested. " +
+                                    "Choose among the returns you wish to track.";
+                        else
+                            return "Your order will be pickup up on the specified pick-up date.";
+                    case "hi":
+                        if (num > 1)
+                            return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक का " +
+                                    "चयन करें किस आर्डर वापसी के लिए आप स्थिति जांचना चाहते हैं.";
+                        else
+                            return "आपका ऑर्डर निर्दिष्ट पिक-अप तिथि पर उठाया जाएगा.";
+                }
+                break;
+            case ActivityDetector.MODE_RETURN_PRODUCT:
+                switch (language) {
+                    case "en":
+                        if (num > 1)
+                            return "We could not find the exact order you requested. Choose among " +
+                                    "the products you wish to return.";
+                        else
+                            return "Please confirm you wish to return this order.";
+                    case "hi":
+                        if (num > 1)
+                            return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक का " +
+                                    "चयन करें.";
+                        else
+                            return "कृपया पुष्टि करें कि आप इस आर्डर को वापस करना चाहते हैं";
+                }
+                break;
+            case ActivityDetector.MODE_CANCEL_PRODUCT:
+                switch (language) {
+                    case "en":
+                        if (num > 1)
+                            return "We could not find the exact order you requested. Choose among" +
+                                    " the products you wish to cancel.";
+                        else
+                            return "Please confirm you wish to cancel this order.";
+                    case "hi":
+                        if (num > 1)
+                            return "हमें आपके द्वारा अनुरोधित सटीक आर्डर प्राप्त नहीं हुआा, कृपया विकल्पों में से एक का " +
+                                    "चयन करें.";
+                        else
+                            return "कृपया पुष्टि करें कि आप इस आर्डर को रद्द करना चाहते हैं";
+                }
+                break;
         }
         return "";
     }
@@ -1309,5 +1180,13 @@ public class VoiceInterface {
                 return "क्षमा करें कोई मिलता हुआ आर्डर प्राप्त नहीं हुआ.";
         }
         return "";
+    }
+
+    private static class BuddyListener implements SlangBuddy.Listener {
+        @Override
+        public void onInitialized() {}
+
+        @Override
+        public void onInitializationFailed(SlangBuddy.InitializationError e) {}
     }
 }

@@ -53,20 +53,6 @@
                 android:text="@string/shr_order_status"
                 android:id="@+id/order_status"
                 android:textAppearance="?attr/textAppearanceBody2"/>
-            <!--<TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="@string/shr_product_description"
-                android:id="@+id/order_location"
-                android:textAppearance="?attr/textAppearanceBody2"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="@string/shr_product_description"
-                android:id="@+id/order_delivery"
-                android:textAppearance="?attr/textAppearanceBody2"/>-->
         </LinearLayout>
         <ImageView
             android:layout_width="24dp"

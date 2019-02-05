@@ -18,20 +18,13 @@ import com.example.mockapp.network.OrderList;
 import com.example.mockapp.slang.ActivityDetector;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import in.slanglabs.platform.application.SlangApplicationUninitializedException;
-import in.slanglabs.platform.application.SlangUnregisteredIntentException;
-import in.slanglabs.platform.ui.SlangScreenContext;
 
 public class OrderListRecyclerViewAdapter extends RecyclerView.Adapter<OrderListRecyclerViewAdapter.OrderListCardViewHolder> {
     private List<OrderList> orderList;
 
     private final static String TAG = OrderListRecyclerViewAdapter.class.getSimpleName();
 
-    //private OrderClickListener orderClickListener;
     private Context context;
     String mode;
 
@@ -102,7 +95,6 @@ public class OrderListRecyclerViewAdapter extends RecyclerView.Adapter<OrderList
     }
 
     public class OrderListCardViewHolder extends RecyclerView.ViewHolder {
-            //implements View.OnClickListener {
 
         public TextView orderNumber;
         public TextView orderDate;
@@ -114,20 +106,6 @@ public class OrderListRecyclerViewAdapter extends RecyclerView.Adapter<OrderList
             orderNumber = itemView.findViewById(R.id.order_number);
             orderDate = itemView.findViewById(R.id.order_date);
             orderEntryRecyclerView = itemView.findViewById(R.id.recycler_view_order_list_card);
-            //itemView.setOnClickListener(this);
         }
-
-        /*@Override
-        public void onClick(View v) {
-            orderClickListener.onOrderClick(v,getAdapterPosition());
-        }*/
     }
-
-    /*public void setOrderClickListener(OrderClickListener orderClickListener) {
-        this.orderClickListener = orderClickListener;
-    }
-
-    public interface OrderClickListener {
-        void onOrderClick(View view, int position);
-    }*/
 }

@@ -8,26 +8,24 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import in.slanglabs.platform.ui.SlangUI;
-
 public class FeedbackActivity extends AppCompatActivity {
 
-    Button b;
-    EditText e1,e2;
+    Button button;
+    EditText editText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feedback);
-        b=findViewById(R.id.button);
-        e2=findViewById(R.id.editText2);
-        b.setOnClickListener(new View.OnClickListener() {
+        button =findViewById(R.id.button);
+        editText =findViewById(R.id.editText2);
+        button.setOnClickListener(new View.OnClickListener() {
             @Override            public void onClick(View v) {
                 Intent i = new Intent(Intent.ACTION_SEND);
                 i.setType("message/html");
                 i.putExtra(Intent.EXTRA_EMAIL, new String[]{"help@shrine.com"});
                 i.putExtra(Intent.EXTRA_SUBJECT, "Feedback from App");
-                i.putExtra(Intent.EXTRA_TEXT, "Message : "+e2.getText());
+                i.putExtra(Intent.EXTRA_TEXT, "Message : "+ editText.getText());
                 try {
                     startActivity(Intent.createChooser(i, "Send feedback..."));
                 } catch (android.content.ActivityNotFoundException ex) {
@@ -38,9 +36,5 @@ public class FeedbackActivity extends AppCompatActivity {
                         Toast.LENGTH_LONG).show();
             }
         });
-        SlangUI.hideTrigger();
-
     }
-
-
 }

@@ -6,7 +6,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 
-import in.slanglabs.platform.ui.SlangUI;
 
 public class MainActivity extends AppCompatActivity implements NavigationHost {
 
@@ -36,7 +35,7 @@ public class MainActivity extends AppCompatActivity implements NavigationHost {
                     .add(R.id.container, new ProductGridFragment())
                     .commit();
         }
-        SlangUI.showTrigger();
+        //SlangUI.showTrigger();
     }
 
     /**

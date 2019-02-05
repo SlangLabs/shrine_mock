@@ -1,67 +1,68 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".FeedbackActivity"
+    android:layout_margin="24dp"
     android:orientation="vertical"
-    android:layout_margin="24dp">
+    tools:context=".FeedbackActivity">
 
- <LinearLayout
-     android:layout_width="match_parent"
-     android:layout_height="wrap_content"
-     android:orientation="vertical">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-  <ImageView
-      android:layout_width="64dp"
-      android:layout_height="36dp"
-      android:layout_gravity="center_horizontal"
-      android:tint="?android:attr/textColorPrimary"
-      app:srcCompat="@drawable/shr_logo" />
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center_horizontal"
+            android:tint="?android:attr/textColorPrimary"
+            app:srcCompat="@drawable/shr_logo" />
 
-  <TextView
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_gravity="center"
-      android:text="@string/shr_app_name"
-      android:textAppearance="@style/TextAppearance.Shrine.Title" />
- </LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/shr_app_name"
+            android:textAppearance="@style/TextAppearance.Shrine.Title" />
+    </LinearLayout>
 
-    <TextView android:text="To: help@shrine.com"
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="30dp"
-        android:textSize="16dp"
-        android:paddingTop="10dp"/>
+        android:paddingTop="10dp"
+        android:text="To: help@shrine.com"
+        android:textSize="16dp" />
 
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
-        android:layout_marginTop="30dp"
         android:layout_height="300dp"
-        app:cardElevation="8dp"
-        app:cardCornerRadius="10dp">
+        android:layout_marginTop="30dp"
+        app:cardCornerRadius="10dp"
+        app:cardElevation="8dp">
 
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:id="@+id/editText2"
-        android:backgroundTint="@color/white"
-        android:textSize="16dp"
-        android:hint="Enter your feedback here"
-        />
+        <EditText
+            android:id="@+id/editText2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:backgroundTint="@color/white"
+            android:hint="Enter your feedback here"
+            android:textSize="16dp" />
 
     </android.support.v7.widget.CardView>
 
-    <Button        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Send"
+    <Button
         android:id="@+id/button"
-        android:singleLine="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/editText2"
+        android:layout_alignLeft="@+id/editText2"
+        android:layout_centerVertical="true"
         android:layout_gravity="center"
         android:layout_marginTop="36dp"
-        android:layout_centerVertical="true"
-        android:layout_alignLeft="@+id/editText2"
-        android:layout_alignStart="@+id/editText2" />
+        android:singleLine="true"
+        android:text="Send" />
 
 </LinearLayout>

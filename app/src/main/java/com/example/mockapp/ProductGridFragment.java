@@ -25,9 +25,6 @@ import com.example.mockapp.staggeredgridlayout.StaggeredProductCardRecyclerViewA
 
 import java.util.List;
 
-import in.slanglabs.platform.ui.SlangScreenContext;
-import in.slanglabs.platform.ui.SlangUI;
-
 public class ProductGridFragment extends Fragment {
 
     private final static String TAG = ProductGridFragment.class.getSimpleName();
@@ -49,7 +46,7 @@ public class ProductGridFragment extends Fragment {
         // Inflate the layout for this fragment with the ProductGrid theme
         View view = inflater.inflate(R.layout.shr_product_grid_fragment, container, false);
 
-        SlangUI.showTrigger();
+        //SlangUI.showTrigger();
 
         // Set up the tool bar
         setUpToolbar(view);

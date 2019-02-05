@@ -55,9 +55,6 @@ public class OrderList implements Parcelable {
         in.readList(this.items, (com.example.mockapp.network.OrderEntry.class.getClassLoader()));
     }
 
-    public OrderList() {
-    }
-
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeValue(order_number);
         dest.writeValue(order_date);

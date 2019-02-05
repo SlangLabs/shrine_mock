@@ -14,8 +14,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import in.slanglabs.platform.ui.SlangUI;
-
 /**
  * Fragment representing the login screen for Shrine.
  */
@@ -57,7 +55,7 @@ public class LoginFragment extends Fragment {
         });
 
         Log.d(TAG, "Calling hide trigger");
-        SlangUI.hideTrigger();
+        //SlangUI.hideTrigger();
 
         return view;
     }

@@ -94,28 +94,6 @@ public class OrderListFragment extends Fragment {
         recyclerViewOrder.setLayoutManager(linearLayoutManager);
         mAdapter = new OrderListRecyclerViewAdapter(getContext(), orderList, mode);
         recyclerViewOrder.setAdapter(mAdapter);
-        //final Bundle bundleSend = new Bundle();
-        //bundleSend.putString(ActivityDetector.ACTIVITY_MODE, mode);
-        //final String modeContext = mode;
-        /*mAdapter.setOrderClickListener(new OrderListRecyclerViewAdapter.OrderClickListener() {
-            @Override
-            public void onOrderClick(View view, int position) {
-                Log.d(TAG, "Click on OrderListFragment");
-                Toast.makeText(getContext(), "From OrderListFragment", Toast.LENGTH_LONG).show();
-                OrderList orders = orderList.get(position);
-                List<OrderEntry> entries = orders.items;
-                String orderString = "Order#: " + orders.order_number;
-                String order_date = "Order Date: " + orders.order_date;
-                bundleSend.putParcelableArrayList(ActivityDetector.ORDER_ENTRY_LIST, (ArrayList<OrderEntry>) entries);
-                bundleSend.putString(ActivityDetector.ORDER_NUMBER, orderString);
-                bundleSend.putString(ActivityDetector.ORDER_DATE, order_date);
-                OrderEntryFragment orderEntryFragment = new OrderEntryFragment();
-                orderEntryFragment.setArguments(bundleSend);
-                *//*if (modeContext.equals(ActivityDetector.MODE_TRACK_PRODUCT))
-                    SlangScreenContext.getInstance().notifyEntityResolved();*//*
-                ((NavigationHost) getActivity()).navigateTo(orderEntryFragment, true);
-            }
-        });*/
         return view;
     }
 
