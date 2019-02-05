@@ -4,4 +4,4 @@
     android:id="@+id/orderListContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".OrderListActivity"/>
+    tools:context="in.slanglabs.shrinemock.OrderListActivity"/>
