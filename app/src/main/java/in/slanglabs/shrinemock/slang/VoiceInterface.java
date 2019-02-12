@@ -96,7 +96,7 @@ public class VoiceInterface {
 
         @Override
         public Status onEntityUnresolved(SlangEntity slangEntity, SlangSession slangSession) {
-            return null;
+            return Status.SUCCESS;
         }
 
         @Override
@@ -1188,5 +1188,15 @@ public class VoiceInterface {
 
         @Override
         public void onInitializationFailed(SlangBuddy.InitializationError e) {}
+
+        @Override
+        public void onLocaleChanged(Locale locale) {
+
+        }
+
+        @Override
+        public void onLocaleChangeFailed(Locale locale, SlangBuddy.LocaleChangeError localeChangeError) {
+
+        }
     }
 }
