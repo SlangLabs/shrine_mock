@@ -3,11 +3,14 @@ Sample e-commerce app with Slang integration
 
 All the features mentioned below can be accessed by navigating through the app's UI as well.
 
+<img src="./images/home.png" width="200px">
+
 This app has the following features
 * Track orders
   - Can be triggered by the user saying things like "Track my orders". The user can also specify the brand, color and product
   that's required, by saying "Track my t-shirt order", "Where are my Adidas shoes", "Track my white socks".
-  - Can also be triggered by user saying "Track my last order" which would show the most recent order the user placed.
+  - Can also be triggered by user saying "Track my last order" which would show the most recent order the user placed.\
+ <img src="./images/home_orders.png" width="200px"> <img src="./images/all_orders.png" width="200px">
   
 * Track refunds
   - Can be triggered by the user saying things like "Track my refunds". The user can also specify the brand, color and product
@@ -25,7 +28,8 @@ This app has the following features
   - Can be triggered by the user saying things like "I want to cancel my jeans order". The user can also specify the brand,
   color and product that's needed.
   - Can also be triggered by user saying "I want to cancel my last order" which would trigger cancellation for the most recent 
-  order placed.
+  order placed.\
+ <img src="./images/home_cancel.png" width="200px"> <img src="./images/cancel.png" width="200px">
 
 * Contact customer support
   - Can be triggered by saying "I want to talk to customer support"
